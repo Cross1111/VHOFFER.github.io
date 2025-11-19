@@ -1159,13 +1159,30 @@
           const value = d.value || d.count || 0;
           countEl.textContent = value;
           if (!visited) localStorage.setItem('offerCompareVisited', '1');
+          let img = document.getElementById('visitor-badge-img');
+          if (!img) {
+            img = document.createElement('img');
+            img.id = 'visitor-badge-img';
+            img.style.height = '20px';
+            img.style.marginLeft = '8px';
+            badge.appendChild(img);
+          }
+          const firstSeg = location.pathname.split('/').filter(Boolean)[0] || '';
+          const pageId = firstSeg ? `${hostname}/${firstSeg}` : hostname;
+          img.src = `https://visitor-badge.laobi.icu/badge?page_id=${encodeURIComponent(pageId)}&left_text=%E8%AE%BF%E5%AE%A2&left_color=%23e2e8f0&right_color=%231a56db`;
         })
         .catch(() => {
-          const img = new Image();
-          img.src = `https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=${encodeURIComponent(location.href)}&count_bg=%231a56db&title_bg=%23e2e8f0&icon=&icon_color=%23ffffff&title=%E8%AE%BF%E5%AE%A2&edge_flat=true`;
-          img.style.height = '20px';
-          img.style.marginLeft = '8px';
-          badge.appendChild(img);
+          let img = document.getElementById('visitor-badge-img');
+          if (!img) {
+            img = document.createElement('img');
+            img.id = 'visitor-badge-img';
+            img.style.height = '20px';
+            img.style.marginLeft = '8px';
+            badge.appendChild(img);
+          }
+          const firstSeg = location.pathname.split('/').filter(Boolean)[0] || '';
+          const pageId = firstSeg ? `${hostname}/${firstSeg}` : hostname;
+          img.src = `https://visitor-badge.laobi.icu/badge?page_id=${encodeURIComponent(pageId)}&left_text=%E8%AE%BF%E5%AE%A2&left_color=%23e2e8f0&right_color=%231a56db`;
           let val = parseInt(localStorage.getItem('offerCompareLocalVisits') || '0', 10);
           if (!visited) {
             val += 1;
