@@ -1150,13 +1150,10 @@
         countEl.textContent = val;
         return;
       }
-      const pathSegment = (location.pathname.split('/').filter(Boolean)[0] || 'root').replace(/[^a-z0-9\-]/gi, '-');
-      const hostKey = hostname.replace(/[^a-z0-9\-\.]/gi, '').replace(/\./g, '-');
-      const siteKey = `${hostKey}-${pathSegment}`;
-      const namespace = `offer-compare-tool-${siteKey}`;
+      const namespace = 'vhoffer-github-io';
       const key = 'visitors';
       const url = visited ? `https://api.countapi.xyz/get/${namespace}/${key}` : `https://api.countapi.xyz/hit/${namespace}/${key}`;
-      fetch(url)
+      fetch(url, { cache: 'no-store' })
         .then(r => r.json())
         .then(d => {
           const value = d.value || d.count || 0;
@@ -1165,8 +1162,7 @@
         })
         .catch(() => {
           const img = new Image();
-          const encoded = encodeURIComponent(`${location.origin}/${pathSegment}/`);
-          img.src = `https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=${encoded}&count_bg=%231a56db&title_bg=%23e2e8f0&icon=&icon_color=%23ffffff&title=访客&edge_flat=true`;
+          img.src = `https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=${encodeURIComponent(location.href)}&count_bg=%231a56db&title_bg=%23e2e8f0&icon=&icon_color=%23ffffff&title=%E8%AE%BF%E5%AE%A2&edge_flat=true`;
           img.style.height = '20px';
           img.style.marginLeft = '8px';
           badge.appendChild(img);
