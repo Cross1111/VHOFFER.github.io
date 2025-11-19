@@ -44,6 +44,13 @@
       .transition-all-300 {
         transition: all 300ms ease-in-out;
       }
+      .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
       .card {
         @apply bg-white rounded-lg shadow-card p-6 transition-all-300;
       }
@@ -91,13 +98,16 @@
 </head>
 <body class="bg-gray-50 min-h-screen">
   <!-- 顶部导航栏 -->
-  <header class="bg-white shadow-sm">
+  <header class="bg-white shadow-sm sticky top-0 z-50">
     <div class="container mx-auto px-4 py-4 flex items-center justify-between">
       <div class="flex items-center space-x-3">
         <img src="https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/708f0d158847480a9a69bc3f4be8cb38~tplv-a9rns2rl98-image.image?rcl=20251119144433F6F6A82A9377623E159F&amp;rk3s=8e244e95&amp;rrcfp=f06b921b&amp;x-expires=1766126751&amp;x-signature=VdwcAVnltjwCzpQNV1eBNgDQIAc%3D" alt="Offer对比工具" class="h-10 w-10">
         <h1 class="text-xl font-bold text-gray-900">Offer对比工具</h1>
       </div>
-      <nav>
+      <button id="mobile-menu-toggle" class="md:hidden text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary/50 rounded px-3 py-2">
+        <i class="fa fa-bars"></i>
+      </button>
+      <nav class="hidden md:block">
         <ul class="flex space-x-6">
           <li><a href="#" class="text-gray-600 hover:text-primary transition-all-300" id="nav-home">首页</a></li>
           <li><a href="#" class="text-gray-600 hover:text-primary transition-all-300" id="nav-compare">开始对比</a></li>
@@ -109,6 +119,14 @@
         <span>你是第</span>
         <span id="visitor-count" class="font-semibold text-primary mx-1">-</span>
         <span>位访客</span>
+      </div>
+    </div>
+    <div id="mobile-menu" class="md:hidden hidden border-t border-gray-200 bg-white">
+      <div class="container mx-auto px-4 py-3 space-y-2">
+        <button id="m-nav-home" class="w-full text-left text-gray-700 px-3 py-2 rounded hover:bg-gray-50">首页</button>
+        <button id="m-nav-compare" class="w-full text-left text-gray-700 px-3 py-2 rounded hover:bg-gray-50">开始对比</button>
+        <button id="m-nav-reports" class="w-full text-left text-gray-700 px-3 py-2 rounded hover:bg-gray-50">我的报告</button>
+        <button id="m-nav-help" class="w-full text-left text-gray-700 px-3 py-2 rounded hover:bg-gray-50">使用帮助</button>
       </div>
     </div>
   </header>
@@ -128,7 +146,7 @@
               <button id="btn-watch-demo" class="btn bg-transparent border-2 border-white text-white hover:bg-white/10 px-6 py-3 text-lg">观看演示</button>
             </div>
           </div>
-          <div class="md:w-1/2 mt-8 md:mt-0 flex justify-center">
+          <div class="hidden md:flex md:w-1/2 mt-8 md:mt-0 justify-center">
             <div class="relative w-full max-w-md">
               <div class="bg-white rounded-lg shadow-xl p-6 transform rotate-3 absolute -right-4 top-4 z-0">
                 <div class="h-48 bg-blue-100 rounded"></div>
@@ -257,26 +275,26 @@
     <section id="section-compare" class="hidden space-y-8">
       <!-- 步骤导航 -->
       <div class="bg-white rounded-lg shadow-sm p-4">
-        <div class="flex flex-wrap justify-between">
-          <div class="step flex flex-col items-center w-full md:w-1/4 mb-4 md:mb-0">
+        <div class="grid grid-cols-4 gap-2">
+          <div class="step flex flex-col items-center px-2">
             <div class="w-10 h-10 rounded-full step-active flex items-center justify-center mb-2">
               <span>1</span>
             </div>
             <span class="text-sm font-medium">基本信息</span>
           </div>
-          <div class="step flex flex-col items-center w-full md:w-1/4 mb-4 md:mb-0">
+          <div class="step flex flex-col items-center px-2">
             <div class="w-10 h-10 rounded-full step-pending flex items-center justify-center mb-2">
               <span>2</span>
             </div>
             <span class="text-sm font-medium">薪资结构</span>
           </div>
-          <div class="step flex flex-col items-center w-full md:w-1/4 mb-4 md:mb-0">
+          <div class="step flex flex-col items-center px-2">
             <div class="w-10 h-10 rounded-full step-pending flex items-center justify-center mb-2">
               <span>3</span>
             </div>
             <span class="text-sm font-medium">工作条件</span>
           </div>
-          <div class="step flex flex-col items-center w-full md:w-1/4">
+          <div class="step flex flex-col items-center px-2">
             <div class="w-10 h-10 rounded-full step-pending flex items-center justify-center mb-2">
               <span>4</span>
             </div>
@@ -287,7 +305,7 @@
 
       <!-- Offer标签页 -->
       <div class="bg-white rounded-lg shadow-sm p-4">
-        <div class="flex border-b">
+        <div class="flex border-b overflow-x-auto no-scrollbar">
           <button class="offer-tab tab-active px-4 py-2 font-medium" data-offer="1">
             <span class="offer-label">Offer 1</span>
             <i class="fa fa-times ml-2 text-gray-400 hover:text-red-500" title="删除" data-delete="true"></i>
@@ -1083,6 +1101,12 @@
       reports: document.getElementById('nav-reports'),
       help: document.getElementById('nav-help')
     };
+    const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const mNavHome = document.getElementById('m-nav-home');
+    const mNavCompare = document.getElementById('m-nav-compare');
+    const mNavReports = document.getElementById('m-nav-reports');
+    const mNavHelp = document.getElementById('m-nav-help');
 
     const sections = {
       home: document.getElementById('section-home'),
@@ -1115,6 +1139,7 @@
       const badge = document.getElementById('visitor-badge');
       const countEl = document.getElementById('visitor-count');
       const visited = localStorage.getItem('offerCompareVisited') === '1';
+      if (!badge || !countEl) return;
       if (isLocal || !navigator.onLine) {
         let val = parseInt(localStorage.getItem('offerCompareLocalVisits') || '0', 10);
         if (!visited) {
@@ -1122,32 +1147,37 @@
           localStorage.setItem('offerCompareVisited', '1');
         }
         localStorage.setItem('offerCompareLocalVisits', String(val));
-        if (badge && countEl) {
-          countEl.textContent = val;
-        }
+        countEl.textContent = val;
         return;
       }
-      const host = hostname.replace(/[^a-z0-9\-\.]/gi, '').replace(/\./g, '-') || 'site';
-      const namespace = 'offer-compare-tool-' + host;
+      const pathSegment = (location.pathname.split('/').filter(Boolean)[0] || 'root').replace(/[^a-z0-9\-]/gi, '-');
+      const hostKey = hostname.replace(/[^a-z0-9\-\.]/gi, '').replace(/\./g, '-');
+      const siteKey = `${hostKey}-${pathSegment}`;
+      const namespace = `offer-compare-tool-${siteKey}`;
       const key = 'visitors';
       const url = visited ? `https://api.countapi.xyz/get/${namespace}/${key}` : `https://api.countapi.xyz/hit/${namespace}/${key}`;
-      fetch(url).then(r => r.json()).then(d => {
-        const value = d.value || d.count || 0;
-        if (badge && countEl) {
+      fetch(url)
+        .then(r => r.json())
+        .then(d => {
+          const value = d.value || d.count || 0;
           countEl.textContent = value;
-        }
-        if (!visited) localStorage.setItem('offerCompareVisited', '1');
-      }).catch(() => {
-        let val = parseInt(localStorage.getItem('offerCompareLocalVisits') || '0', 10);
-        if (!visited) {
-          val += 1;
-          localStorage.setItem('offerCompareVisited', '1');
-        }
-        localStorage.setItem('offerCompareLocalVisits', String(val));
-        if (badge && countEl) {
+          if (!visited) localStorage.setItem('offerCompareVisited', '1');
+        })
+        .catch(() => {
+          const img = new Image();
+          const encoded = encodeURIComponent(`${location.origin}/${pathSegment}/`);
+          img.src = `https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=${encoded}&count_bg=%231a56db&title_bg=%23e2e8f0&icon=&icon_color=%23ffffff&title=访客&edge_flat=true`;
+          img.style.height = '20px';
+          img.style.marginLeft = '8px';
+          badge.appendChild(img);
+          let val = parseInt(localStorage.getItem('offerCompareLocalVisits') || '0', 10);
+          if (!visited) {
+            val += 1;
+            localStorage.setItem('offerCompareVisited', '1');
+          }
+          localStorage.setItem('offerCompareLocalVisits', String(val));
           countEl.textContent = val;
-        }
-      });
+        });
     }
 
     // 初始化
@@ -1173,6 +1203,17 @@
         e.preventDefault();
         showSection('help');
       });
+
+      if (mobileMenuToggle) {
+        mobileMenuToggle.addEventListener('click', () => {
+          if (!mobileMenu) return;
+          mobileMenu.classList.toggle('hidden');
+        });
+      }
+      if (mNavHome) mNavHome.addEventListener('click', () => { showSection('home'); mobileMenu.classList.add('hidden'); });
+      if (mNavCompare) mNavCompare.addEventListener('click', () => { showSection('compare'); mobileMenu.classList.add('hidden'); });
+      if (mNavReports) mNavReports.addEventListener('click', () => { showSection('reports'); loadReports(); mobileMenu.classList.add('hidden'); });
+      if (mNavHelp) mNavHelp.addEventListener('click', () => { showSection('help'); mobileMenu.classList.add('hidden'); });
 
       // 首页按钮
       btnStartCompare.addEventListener('click', () => {
@@ -1224,7 +1265,12 @@
         stepEl.classList.add('cursor-pointer');
         stepEl.addEventListener('click', () => {
           saveStepData(currentStep);
-          goToStep(index + 1);
+          const targetStep = index + 1;
+          if (targetStep === 4 && countValidOffers() < 2) {
+            alert('请至少填写两个完整的Offer信息后再查看对比结果');
+            return;
+          }
+          goToStep(targetStep);
         });
       });
     }
@@ -1275,9 +1321,18 @@
 
       if (currentStep < 4) {
         currentStep++;
+        if (currentStep === 4 && countValidOffers() < 2) {
+          alert('请至少填写两个完整的Offer信息后再查看对比结果');
+          currentStep = 3;
+          return;
+        }
         goToStep(currentStep);
       } else {
         // 计算结果
+        if (countValidOffers() < 2) {
+          alert('请至少填写两个完整的Offer信息后再查看对比结果');
+          return;
+        }
         calculateResults();
       }
     }
@@ -1420,7 +1475,7 @@
       const fallbackId = parseInt(firstTab.dataset.offer);
       switchOffer(fallbackId);
       if (currentStep === 4) {
-        const validCount = Object.keys(offers).filter(k => offers[k] && offers[k].baseSalary).length;
+        const validCount = countValidOffers();
         if (validCount >= 2) {
           calculateResults();
         }
@@ -2349,171 +2404,35 @@
     // 生成个性化建议
     function generateAdvice(validOffers) {
       let advice = '';
-      
-      // 按总分排序
-      const sortedOffers = [...validOffers].sort((a, b) => b.result.scores.total - a.result.scores.total);
-      
-      if (sortedOffers.length === 1) {
+      const sorted = [...validOffers].sort((a, b) => b.result.scores.total - a.result.scores.total);
+      if (sorted.length < 1) {
         advice = '请至少添加两个Offer进行对比，以获取更有价值的建议。';
-      } else if (sortedOffers.length === 2) {
-        const topOffer = sortedOffers[0];
-        const secondOffer = sortedOffers[1];
-        const scoreDiff = topOffer.result.scores.total - secondOffer.result.scores.total;
-        
-        if (scoreDiff > 10) {
-          advice = `${topOffer.data.companyName || `Offer ${topOffer.id}`}在综合评估中表现显著优于${secondOffer.data.companyName || `Offer ${secondOffer.id}`}，特别是在`;
-          const优势 = [];
-          
-          if (topOffer.result.scores.salaryCompetitiveness > secondOffer.result.scores.salaryCompetitiveness * 1.1) {
-            优势.push('薪资竞争力');
-          }
-          if (topOffer.result.scores.benefits > secondOffer.result.scores.benefits * 1.1) {
-            优势.push('福利完善度');
-          }
-          if (topOffer.result.scores.workIntensity > secondOffer.result.scores.workIntensity * 1.1) {
-            优势.push('工作强度');
-          }
-          if (topOffer.result.scores.cityLivability > secondOffer.result.scores.cityLivability * 1.1) {
-            优势.push('城市宜居性');
-          }
-          if (topOffer.result.scores.careerDevelopment > secondOffer.result.scores.careerDevelopment * 1.1) {
-            优势.push('职业发展');
-          }
-          
-          if (优势.length > 0) {
-            advice += 优势.join('、');
-          } else {
-            advice += '多个方面';
-          }
-          
-          advice += `方面。如果您追求综合发展，${topOffer.data.companyName || `Offer ${topOffer.id}`}是更好的选择。`;
-        } else {
-          advice = `两个Offer各有优势，${topOffer.data.companyName || `Offer ${topOffer.id}`}在`;
-          const top优势 = [];
-          
-          if (topOffer.result.scores.salaryCompetitiveness > secondOffer.result.scores.salaryCompetitiveness * 1.05) {
-            top优势.push('薪资竞争力');
-          }
-          if (topOffer.result.scores.benefits > secondOffer.result.scores.benefits * 1.05) {
-            top优势.push('福利完善度');
-          }
-          if (topOffer.result.scores.workIntensity > secondOffer.result.scores.workIntensity * 1.05) {
-            top优势.push('工作强度');
-          }
-          if (topOffer.result.scores.cityLivability > secondOffer.result.scores.cityLivability * 1.05) {
-            top优势.push('城市宜居性');
-          }
-          if (topOffer.result.scores.careerDevelopment > secondOffer.result.scores.careerDevelopment * 1.05) {
-            top优势.push('职业发展');
-          }
-          
-          if (top优势.length > 0) {
-            advice += top优势.join('、');
-          } else {
-            advice += '某些方面';
-          }
-          
-          advice += `表现较好，而${secondOffer.data.companyName || `Offer ${secondOffer.id}`}在`;
-          const second优势 = [];
-          
-          if (secondOffer.result.scores.salaryCompetitiveness > topOffer.result.scores.salaryCompetitiveness * 1.05) {
-            second优势.push('薪资竞争力');
-          }
-          if (secondOffer.result.scores.benefits > topOffer.result.scores.benefits * 1.05) {
-            second优势.push('福利完善度');
-          }
-          if (secondOffer.result.scores.workIntensity > topOffer.result.scores.workIntensity * 1.05) {
-            second优势.push('工作强度');
-          }
-          if (secondOffer.result.scores.cityLivability > topOffer.result.scores.cityLivability * 1.05) {
-            second优势.push('城市宜居性');
-          }
-          if (secondOffer.result.scores.careerDevelopment > topOffer.result.scores.careerDevelopment * 1.05) {
-            second优势.push('职业发展');
-          }
-          
-          if (second优势.length > 0) {
-            advice += second优势.join('、');
-          } else {
-            advice += '其他方面';
-          }
-          
-          advice += '更具优势。建议您根据个人职业规划和优先考虑因素做出选择。如果您更看重薪资和福利，可以选择薪资更高的Offer；如果您更看重工作生活平衡和城市宜居性，可以选择工作强度较低的Offer。';
-        }
-      } else {
-        // 多个Offer的情况
-        const topOffer = sortedOffers[0];
-        const secondOffer = sortedOffers[1];
-        const scoreDiff = topOffer.result.scores.total - secondOffer.result.scores.total;
-        
-        if (scoreDiff > 10) {
-          advice = `${topOffer.data.companyName || `Offer ${topOffer.id}`}在综合评估中表现最佳，显著优于其他Offer，特别是在`;
-          const优势 = [];
-          
-          // 找出相对于所有其他Offer的优势
-          sortedOffers.slice(1).forEach(otherOffer => {
-            if (topOffer.result.scores.salaryCompetitiveness > otherOffer.result.scores.salaryCompetitiveness * 1.1) {
-              if (!优势.includes('薪资竞争力')) 优势.push('薪资竞争力');
-            }
-            if (topOffer.result.scores.benefits > otherOffer.result.scores.benefits * 1.1) {
-              if (!优势.includes('福利完善度')) 优势.push('福利完善度');
-            }
-            if (topOffer.result.scores.workIntensity > otherOffer.result.scores.workIntensity * 1.1) {
-              if (!优势.includes('工作强度')) 优势.push('工作强度');
-            }
-            if (topOffer.result.scores.cityLivability > otherOffer.result.scores.cityLivability * 1.1) {
-              if (!优势.includes('城市宜居性')) 优势.push('城市宜居性');
-            }
-            if (topOffer.result.scores.careerDevelopment > otherOffer.result.scores.careerDevelopment * 1.1) {
-              if (!优势.includes('职业发展')) 优势.push('职业发展');
-            }
-          });
-          
-          if (优势.length > 0) {
-            advice += 优势.join('、');
-          } else {
-            advice += '多个方面';
-          }
-          
-          advice += `方面。如果您追求综合发展，${topOffer.data.companyName || `Offer ${topOffer.id}`}是最佳选择。`;
-        } else {
-          advice = `在所有Offer中，${topOffer.data.companyName || `Offer ${topOffer.id}`}综合表现略优，但其他Offer在某些方面也有竞争力。`;
-          
-          // 分析每个Offer的独特优势
-          sortedOffers.forEach((offer, index) => {
-            if (index < 3) { // 只分析前3个
-              const 优势 = [];
-              
-              sortedOffers.forEach(otherOffer => {
-                if (offer.id === otherOffer.id) return;
-                
-                if (offer.result.scores.salaryCompetitiveness > otherOffer.result.scores.salaryCompetitiveness * 1.1) {
-                  if (!优势.includes('薪资竞争力')) 优势.push('薪资竞争力');
-                }
-                if (offer.result.scores.benefits > otherOffer.result.scores.benefits * 1.1) {
-                  if (!优势.includes('福利完善度')) 优势.push('福利完善度');
-                }
-                if (offer.result.scores.workIntensity > otherOffer.result.scores.workIntensity * 1.1) {
-                  if (!优势.includes('工作强度')) 优势.push('工作强度');
-                }
-                if (offer.result.scores.cityLivability > otherOffer.result.scores.cityLivability * 1.1) {
-                  if (!优势.includes('城市宜居性')) 优势.push('城市宜居性');
-                }
-                if (offer.result.scores.careerDevelopment > otherOffer.result.scores.careerDevelopment * 1.1) {
-                  if (!优势.includes('职业发展')) 优势.push('职业发展');
-                }
-              });
-              
-              if (优势.length > 0) {
-                advice += ` ${offer.data.companyName || `Offer ${offer.id}`}在${优势.join('、')}方面表现突出；`;
-              }
-            }
-          });
-          
-          advice += '建议您根据个人职业规划和优先考虑因素做出选择。如果您更看重薪资和福利，可以选择薪资更高的Offer；如果您更看重工作生活平衡和城市宜居性，可以选择工作强度较低的Offer。';
-        }
+        document.getElementById('personalized-advice').textContent = advice;
+        return;
       }
-      
+      if (sorted.length === 1) {
+        const only = sorted[0];
+        const name = only.data.companyName || `Offer ${only.id}`;
+        advice = `${name}的综合评分为 ${Math.round(only.result.scores.total)} 分。建议再添加一份 Offer 进行对比，以获得更清晰的结论。`;
+        document.getElementById('personalized-advice').textContent = advice;
+        return;
+      }
+      const top = sorted[0];
+      const second = sorted[1];
+      const topName = top.data.companyName || `Offer ${top.id}`;
+      const secondName = second.data.companyName || `Offer ${second.id}`;
+      const diff = top.result.scores.total - second.result.scores.total;
+      const betterReasons = [];
+      if (top.result.scores.salaryCompetitiveness > second.result.scores.salaryCompetitiveness + 1) betterReasons.push('薪资竞争力');
+      if (top.result.scores.benefits > second.result.scores.benefits + 1) betterReasons.push('福利完善度');
+      if (top.result.scores.workIntensity > second.result.scores.workIntensity + 1) betterReasons.push('工作强度更低');
+      if (top.result.scores.cityLivability > second.result.scores.cityLivability + 1) betterReasons.push('城市宜居性');
+      if (top.result.scores.careerDevelopment > second.result.scores.careerDevelopment + 1) betterReasons.push('职业发展');
+      if (top.result.scores.teamAtmosphere > second.result.scores.teamAtmosphere + 1) betterReasons.push('团队氛围');
+      if (top.result.scores.interestMatch > second.result.scores.interestMatch + 1) betterReasons.push('兴趣匹配度');
+      const prefix = diff > 10 ? '综合评分显著领先' : diff > 3 ? '综合评分更优' : '综合评分略优';
+      const reasonText = betterReasons.length ? `在${betterReasons.slice(0, 3).join('、')}方面更具优势` : '综合表现更优';
+      advice = `${topName}相较于${secondName}，${prefix}（${Math.round(top.result.scores.total)} vs ${Math.round(second.result.scores.total)}），${reasonText}。请结合个人偏好与职业规划选择更适合的 Offer。`;
       document.getElementById('personalized-advice').textContent = advice;
     }
 
@@ -2674,11 +2593,19 @@
     function downloadImageReport() {
       if (currentStep !== 4) {
         showSection('compare');
+        if (countValidOffers() < 2) {
+          alert('请至少填写两个完整的Offer信息后再查看对比结果');
+          return;
+        }
         goToStep(4);
       }
       const target = document.getElementById('step-4');
       if (!target || target.classList.contains('hidden')) {
         showSection('compare');
+        if (countValidOffers() < 2) {
+          alert('请至少填写两个完整的Offer信息后再查看对比结果');
+          return;
+        }
         goToStep(4);
       }
       requestAnimationFrame(() => {
@@ -2698,6 +2625,17 @@
             });
         }, 300);
       });
+    }
+
+    function countValidOffers() {
+      let count = 0;
+      for (let i = 1; i <= maxOfferId; i++) {
+        const o = offers[i];
+        if (o && o.companyName && o.city && o.baseSalary && o.socialSecurityBase && o.housingFundBase) {
+          count++;
+        }
+      }
+      return count;
     }
 
 
