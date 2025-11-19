@@ -115,11 +115,7 @@
           <li><a href="#" class="text-gray-600 hover:text-primary transition-all-300" id="nav-help">使用帮助</a></li>
         </ul>
       </nav>
-      <div id="visitor-badge" class="flex items-center text-sm text-gray-600">
-        <span>你是第</span>
-        <span id="visitor-count" class="font-semibold text-primary mx-1">-</span>
-        <span>位访客</span>
-      </div>
+      <div id="visitor-badge" class="flex items-center text-sm text-gray-600"></div>
     </div>
     <div id="mobile-menu" class="md:hidden hidden border-t border-gray-200 bg-white">
       <div class="container mx-auto px-4 py-3 space-y-2">
@@ -1135,62 +1131,19 @@
     let stepTemplates = {};
     function updateVisitorCount() {
       const hostname = location.hostname || '';
-      const isLocal = hostname === 'localhost' || hostname === '127.0.0.1' || location.protocol === 'file:';
       const badge = document.getElementById('visitor-badge');
-      const countEl = document.getElementById('visitor-count');
-      const visited = localStorage.getItem('offerCompareVisited') === '1';
-      if (!badge || !countEl) return;
-      if (isLocal || !navigator.onLine) {
-        let val = parseInt(localStorage.getItem('offerCompareLocalVisits') || '0', 10);
-        if (!visited) {
-          val += 1;
-          localStorage.setItem('offerCompareVisited', '1');
-        }
-        localStorage.setItem('offerCompareLocalVisits', String(val));
-        countEl.textContent = val;
-        return;
+      if (!badge) return;
+      let img = document.getElementById('visitor-badge-img');
+      if (!img) {
+        img = document.createElement('img');
+        img.id = 'visitor-badge-img';
+        img.style.height = '20px';
+        img.style.marginLeft = '8px';
+        badge.appendChild(img);
       }
-      const namespace = 'vhoffer-github-io';
-      const key = 'visitors';
-      const url = visited ? `https://api.countapi.xyz/get/${namespace}/${key}` : `https://api.countapi.xyz/hit/${namespace}/${key}`;
-      fetch(url, { cache: 'no-store' })
-        .then(r => r.json())
-        .then(d => {
-          const value = d.value || d.count || 0;
-          countEl.textContent = value;
-          if (!visited) localStorage.setItem('offerCompareVisited', '1');
-          let img = document.getElementById('visitor-badge-img');
-          if (!img) {
-            img = document.createElement('img');
-            img.id = 'visitor-badge-img';
-            img.style.height = '20px';
-            img.style.marginLeft = '8px';
-            badge.appendChild(img);
-          }
-          const firstSeg = location.pathname.split('/').filter(Boolean)[0] || '';
-          const pageId = firstSeg ? `${hostname}/${firstSeg}` : hostname;
-          img.src = `https://visitor-badge.laobi.icu/badge?page_id=${encodeURIComponent(pageId)}&left_text=%E8%AE%BF%E5%AE%A2&left_color=%23e2e8f0&right_color=%231a56db`;
-        })
-        .catch(() => {
-          let img = document.getElementById('visitor-badge-img');
-          if (!img) {
-            img = document.createElement('img');
-            img.id = 'visitor-badge-img';
-            img.style.height = '20px';
-            img.style.marginLeft = '8px';
-            badge.appendChild(img);
-          }
-          const firstSeg = location.pathname.split('/').filter(Boolean)[0] || '';
-          const pageId = firstSeg ? `${hostname}/${firstSeg}` : hostname;
-          img.src = `https://visitor-badge.laobi.icu/badge?page_id=${encodeURIComponent(pageId)}&left_text=%E8%AE%BF%E5%AE%A2&left_color=%23e2e8f0&right_color=%231a56db`;
-          let val = parseInt(localStorage.getItem('offerCompareLocalVisits') || '0', 10);
-          if (!visited) {
-            val += 1;
-            localStorage.setItem('offerCompareVisited', '1');
-          }
-          localStorage.setItem('offerCompareLocalVisits', String(val));
-          countEl.textContent = val;
-        });
+      const firstSeg = location.pathname.split('/').filter(Boolean)[0] || '';
+      const pageId = firstSeg ? `${hostname}/${firstSeg}` : hostname;
+      img.src = `https://visitor-badge.laobi.icu/badge?page_id=${encodeURIComponent(pageId)}&left_text=%E8%AE%BF%E5%AE%A2&left_color=%23e2e8f0&right_color=%231a56db`;
     }
 
     // 初始化
