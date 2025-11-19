@@ -1,0 +1,2738 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Offer对比工具 - 智能薪资分析与决策助手</title>
+  <!-- Tailwind CSS v3 -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome -->
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+  <!-- jsPDF & html2canvas for PDF generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <!-- Tailwind 配置 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#1a56db',
+            secondary: '#e2e8f0',
+            success: '#10b981',
+            warning: '#f59e0b',
+            danger: '#ef4444',
+            info: '#3b82f6',
+            light: '#f8fafc',
+            dark: '#1e293b'
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+          boxShadow: {
+            'card': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+            'card-hover': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+          }
+        }
+      }
+    }
+  </script>
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .transition-all-300 {
+        transition: all 300ms ease-in-out;
+      }
+      .card {
+        @apply bg-white rounded-lg shadow-card p-6 transition-all-300;
+      }
+      .card:hover {
+        @apply shadow-card-hover;
+      }
+      .btn {
+        @apply px-4 py-2 rounded-md font-medium transition-all-300 focus:outline-none focus:ring-2 focus:ring-offset-2;
+      }
+      .btn-primary {
+        @apply bg-primary text-white hover:bg-primary/90 focus:ring-primary/50;
+      }
+      .btn-secondary {
+        @apply bg-secondary text-dark hover:bg-secondary/90 focus:ring-secondary/50;
+      }
+      .btn-success {
+        @apply bg-success text-white hover:bg-success/90 focus:ring-success/50;
+      }
+      .btn-outline {
+        @apply border border-gray-300 text-gray-700 hover:bg-gray-50 focus:ring-gray-200;
+      }
+      .input-field {
+        @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary;
+      }
+      .label {
+        @apply block text-sm font-medium text-gray-700 mb-1;
+      }
+      .step-active {
+        @apply bg-primary text-white;
+      }
+      .step-completed {
+        @apply bg-success text-white;
+      }
+      .step-pending {
+        @apply bg-gray-200 text-gray-500;
+      }
+      .tab-active {
+        @apply border-b-2 border-primary text-primary;
+      }
+      .tab-inactive {
+        @apply text-gray-500 hover:text-gray-700;
+      }
+    }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <!-- 顶部导航栏 -->
+  <header class="bg-white shadow-sm">
+    <div class="container mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <img src="https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/708f0d158847480a9a69bc3f4be8cb38~tplv-a9rns2rl98-image.image?rcl=20251119144433F6F6A82A9377623E159F&amp;rk3s=8e244e95&amp;rrcfp=f06b921b&amp;x-expires=1766126751&amp;x-signature=VdwcAVnltjwCzpQNV1eBNgDQIAc%3D" alt="Offer对比工具" class="h-10 w-10">
+        <h1 class="text-xl font-bold text-gray-900">Offer对比工具</h1>
+      </div>
+      <nav>
+        <ul class="flex space-x-6">
+          <li><a href="#" class="text-gray-600 hover:text-primary transition-all-300" id="nav-home">首页</a></li>
+          <li><a href="#" class="text-gray-600 hover:text-primary transition-all-300" id="nav-compare">开始对比</a></li>
+          <li><a href="#" class="text-gray-600 hover:text-primary transition-all-300" id="nav-reports">我的报告</a></li>
+          <li><a href="#" class="text-gray-600 hover:text-primary transition-all-300" id="nav-help">使用帮助</a></li>
+        </ul>
+      </nav>
+      <div id="visitor-badge" class="flex items-center text-sm text-gray-600">
+        <span>你是第</span>
+        <span id="visitor-count" class="font-semibold text-primary mx-1">-</span>
+        <span>位访客</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- 主内容区 -->
+  <main class="container mx-auto px-4 py-8">
+    <!-- 首页内容 -->
+    <section id="section-home" class="space-y-8">
+      <!-- 英雄区域 -->
+      <div class="bg-gradient-to-r from-primary to-blue-700 rounded-xl shadow-lg overflow-hidden">
+        <div class="container mx-auto px-6 py-12 md:py-16 flex flex-col md:flex-row items-center">
+          <div class="md:w-1/2 text-white space-y-4">
+            <h2 class="text-3xl md:text-4xl font-bold">智能Offer对比，做出明智职业决策</h2>
+            <p class="text-lg md:text-xl opacity-90">精准计算税后收入，综合评估工作性价比，生成专业对比报告，助你做出最佳选择。</p>
+            <div class="flex flex-wrap gap-4">
+              <button id="btn-start-compare" class="btn bg-white text-primary hover:bg-blue-50 px-6 py-3 text-lg">开始对比</button>
+              <button id="btn-watch-demo" class="btn bg-transparent border-2 border-white text-white hover:bg-white/10 px-6 py-3 text-lg">观看演示</button>
+            </div>
+          </div>
+          <div class="md:w-1/2 mt-8 md:mt-0 flex justify-center">
+            <div class="relative w-full max-w-md">
+              <div class="bg-white rounded-lg shadow-xl p-6 transform rotate-3 absolute -right-4 top-4 z-0">
+                <div class="h-48 bg-blue-100 rounded"></div>
+              </div>
+              <div class="bg-white rounded-lg shadow-xl p-6 transform -rotate-2 absolute left-4 top-8 z-10">
+                <div class="h-48 bg-green-100 rounded"></div>
+              </div>
+              <div class="bg-white rounded-lg shadow-xl p-6 relative z-20">
+                <div class="flex justify-between items-center mb-4">
+                  <h3 class="font-bold text-gray-800">Offer对比结果</h3>
+                  <span class="text-sm text-gray-500">2025年11月</span>
+                </div>
+                <div class="space-y-4">
+                  <div class="flex justify-between items-center">
+                    <span class="font-medium">公司A</span>
+                    <span class="text-lg font-bold text-primary">¥28,500</span>
+                  </div>
+                  <div class="flex justify-between items-center">
+                    <span class="font-medium">公司B</span>
+                    <span class="text-lg font-bold text-gray-600">¥26,200</span>
+                  </div>
+                  <div class="h-2 bg-gray-200 rounded-full mt-4">
+                    <div class="h-2 bg-primary rounded-full" style="width: 65%"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 功能特点 -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="card">
+          <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+            <i class="fa fa-calculator text-primary text-xl"></i>
+          </div>
+          <h3 class="text-xl font-bold text-gray-900 mb-2">精准计算税后收入</h3>
+          <p class="text-gray-600">结合薪资结构、社保公积金、城市差异，精确计算你的税后收入。</p>
+        </div>
+        <div class="card">
+          <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+            <i class="fa fa-balance-scale text-success text-xl"></i>
+          </div>
+          <h3 class="text-xl font-bold text-gray-900 mb-2">综合评估工作性价比</h3>
+          <p class="text-gray-600">考虑加班、消费水平、城市宜居度等因素，全面评估工作性价比。</p>
+        </div>
+        <div class="card">
+          <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+            <i class="fa fa-file-pdf-o text-purple-600 text-xl"></i>
+          </div>
+          <h3 class="text-xl font-bold text-gray-900 mb-2">生成可下载对比报告</h3>
+          <p class="text-gray-600">生成专业、详细的对比报告，支持PDF格式下载，便于分享和保存。</p>
+        </div>
+      </div>
+
+      <!-- 用户评价 -->
+      <div class="bg-white rounded-xl shadow-lg p-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">用户评价</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div class="border border-gray-200 rounded-lg p-6">
+            <div class="flex items-center mb-4">
+              <div class="text-yellow-400 flex">
+                <i class="fa fa-star"></i>
+                <i class="fa fa-star"></i>
+                <i class="fa fa-star"></i>
+                <i class="fa fa-star"></i>
+                <i class="fa fa-star"></i>
+              </div>
+              <span class="ml-2 text-sm text-gray-500">5.0</span>
+            </div>
+            <p class="text-gray-600 mb-4">"这个工具太棒了！帮我清晰地对比了两个Offer的税后收入和综合性价比，让我做出了更明智的选择。"</p>
+            <div class="flex items-center">
+              <div class="w-10 h-10 bg-gray-200 rounded-full mr-3"></div>
+              <div>
+                <p class="font-medium text-gray-900">张先生</p>
+                <p class="text-sm text-gray-500">软件工程师</p>
+              </div>
+            </div>
+          </div>
+          <div class="border border-gray-200 rounded-lg p-6">
+            <div class="flex items-center mb-4">
+              <div class="text-yellow-400 flex">
+                <i class="fa fa-star"></i>
+                <i class="fa fa-star"></i>
+                <i class="fa fa-star"></i>
+                <i class="fa fa-star"></i>
+                <i class="fa fa-star-half-o"></i>
+              </div>
+              <span class="ml-2 text-sm text-gray-500">4.5</span>
+            </div>
+            <p class="text-gray-600 mb-4">"作为应届生，我对薪资结构不太了解。这个工具帮我算清楚了税后收入和各种福利的价值，非常实用！"</p>
+            <div class="flex items-center">
+              <div class="w-10 h-10 bg-gray-200 rounded-full mr-3"></div>
+              <div>
+                <p class="font-medium text-gray-900">李同学</p>
+                <p class="text-sm text-gray-500">应届毕业生</p>
+              </div>
+            </div>
+          </div>
+          <div class="border border-gray-200 rounded-lg p-6">
+            <div class="flex items-center mb-4">
+              <div class="text-yellow-400 flex">
+                <i class="fa fa-star"></i>
+                <i class="fa fa-star"></i>
+                <i class="fa fa-star"></i>
+                <i class="fa fa-star"></i>
+                <i class="fa fa-star-o"></i>
+              </div>
+              <span class="ml-2 text-sm text-gray-500">4.0</span>
+            </div>
+            <p class="text-gray-600 mb-4">"城市宜居度评分功能很有特色，帮我考虑了工作之外的生活质量因素，让我的决策更加全面。"</p>
+            <div class="flex items-center">
+              <div class="w-10 h-10 bg-gray-200 rounded-full mr-3"></div>
+              <div>
+                <p class="font-medium text-gray-900">王女士</p>
+                <p class="text-sm text-gray-500">市场经理</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 对比工具内容 -->
+    <section id="section-compare" class="hidden space-y-8">
+      <!-- 步骤导航 -->
+      <div class="bg-white rounded-lg shadow-sm p-4">
+        <div class="flex flex-wrap justify-between">
+          <div class="step flex flex-col items-center w-full md:w-1/4 mb-4 md:mb-0">
+            <div class="w-10 h-10 rounded-full step-active flex items-center justify-center mb-2">
+              <span>1</span>
+            </div>
+            <span class="text-sm font-medium">基本信息</span>
+          </div>
+          <div class="step flex flex-col items-center w-full md:w-1/4 mb-4 md:mb-0">
+            <div class="w-10 h-10 rounded-full step-pending flex items-center justify-center mb-2">
+              <span>2</span>
+            </div>
+            <span class="text-sm font-medium">薪资结构</span>
+          </div>
+          <div class="step flex flex-col items-center w-full md:w-1/4 mb-4 md:mb-0">
+            <div class="w-10 h-10 rounded-full step-pending flex items-center justify-center mb-2">
+              <span>3</span>
+            </div>
+            <span class="text-sm font-medium">工作条件</span>
+          </div>
+          <div class="step flex flex-col items-center w-full md:w-1/4">
+            <div class="w-10 h-10 rounded-full step-pending flex items-center justify-center mb-2">
+              <span>4</span>
+            </div>
+            <span class="text-sm font-medium">对比结果</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Offer标签页 -->
+      <div class="bg-white rounded-lg shadow-sm p-4">
+        <div class="flex border-b">
+          <button class="offer-tab tab-active px-4 py-2 font-medium" data-offer="1">
+            <span class="offer-label">Offer 1</span>
+            <i class="fa fa-times ml-2 text-gray-400 hover:text-red-500" title="删除" data-delete="true"></i>
+          </button>
+          <button class="offer-tab tab-inactive px-4 py-2 font-medium" data-offer="2">
+            <span class="offer-label">Offer 2</span>
+            <i class="fa fa-times ml-2 text-gray-400 hover:text-red-500" title="删除" data-delete="true"></i>
+          </button>
+          <button class="offer-tab tab-inactive px-4 py-2 font-medium" id="add-offer-btn">
+            <i class="fa fa-plus text-gray-400"></i> 添加Offer
+          </button>
+        </div>
+      </div>
+
+      <!-- 表单内容 -->
+      <div class="form-container">
+        <!-- 步骤1：基本信息 -->
+        <div class="step-content" id="step-1">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="card">
+              <h3 class="text-xl font-bold text-gray-900 mb-4">公司信息</h3>
+              <div class="space-y-4">
+                <div>
+                  <label class="label" for="company-name-{offerId}">公司名称</label>
+                  <input type="text" id="company-name-{offerId}" class="input-field" placeholder="请输入公司名称">
+                </div>
+                <div>
+                  <label class="label" for="position-{offerId}">岗位名称</label>
+                  <input type="text" id="position-{offerId}" class="input-field" placeholder="请输入岗位名称">
+                </div>
+                <div>
+                  <label class="label" for="city-{offerId}">工作城市</label>
+                  <select id="city-{offerId}" class="input-field">
+                    <option value="">请选择城市</option>
+                    <option value="beijing">北京</option>
+                    <option value="shanghai">上海</option>
+                    <option value="guangzhou">广州</option>
+                    <option value="shenzhen">深圳</option>
+                    <option value="hangzhou">杭州</option>
+                    <option value="nanjing">南京</option>
+                    <option value="chengdu">成都</option>
+                    <option value="wuhan">武汉</option>
+                    <option value="chongqing">重庆</option>
+                    <option value="other">其他城市</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <h3 class="text-xl font-bold text-gray-900 mb-4">合同信息</h3>
+              <div class="space-y-4">
+                <div>
+                  <label class="label" for="start-date-{offerId}">入职时间</label>
+                  <input type="date" id="start-date-{offerId}" class="input-field">
+                </div>
+                <div>
+                  <label class="label" for="contract-years-{offerId}">合同年限</label>
+                  <select id="contract-years-{offerId}" class="input-field">
+                    <option value="1">1年</option>
+                    <option value="2">2年</option>
+                    <option value="3">3年</option>
+                    <option value="5">5年</option>
+                    <option value="unlimited">无固定期限</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="label" for="probation-months-{offerId}">试用期月数</label>
+                  <select id="probation-months-{offerId}" class="input-field">
+                    <option value="1">1个月</option>
+                    <option value="2">2个月</option>
+                    <option value="3">3个月</option>
+                    <option value="6">6个月</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="label" for="probation-salary-rate-{offerId}">试用期薪资折扣</label>
+                  <select id="probation-salary-rate-{offerId}" class="input-field">
+                    <option value="0.8">80%</option>
+                    <option value="0.9">90%</option>
+                    <option value="1">100%</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 步骤2：薪资结构 -->
+        <div class="step-content hidden" id="step-2">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="card">
+              <h3 class="text-xl font-bold text-gray-900 mb-4">基本薪资</h3>
+              <div class="space-y-4">
+                <div>
+                  <label class="label" for="base-salary-{offerId}">基本工资（元/月）</label>
+                  <input type="number" id="base-salary-{offerId}" class="input-field" placeholder="请输入基本工资">
+                </div>
+                <div>
+                  <label class="label" for="annual-bonus-type-{offerId}">年终奖类型</label>
+                  <select id="annual-bonus-type-{offerId}" class="input-field">
+                    <option value="fixed">固定金额</option>
+                    <option value="variable">浮动金额</option>
+                    <option value="none">无</option>
+                  </select>
+                </div>
+                <div id="annual-bonus-amount-container-{offerId}">
+                  <label class="label" for="annual-bonus-amount-{offerId}">年终奖金额（元）</label>
+                  <input type="number" id="annual-bonus-amount-{offerId}" class="input-field" placeholder="请输入年终奖金额">
+                </div>
+                <div id="annual-bonus-rate-container-{offerId}" class="hidden">
+                  <label class="label" for="annual-bonus-rate-{offerId}">年终奖比例（相对于基本工资）</label>
+                  <input type="number" id="annual-bonus-rate-{offerId}" class="input-field" placeholder="例如：1.5表示1.5个月工资" step="0.1" min="0">
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <h3 class="text-xl font-bold text-gray-900 mb-4">绩效奖金</h3>
+              <div class="space-y-4">
+                <div>
+                  <label class="label" for="performance-bonus-frequency-{offerId}">发放频率</label>
+                  <select id="performance-bonus-frequency-{offerId}" class="input-field">
+                    <option value="monthly">月度</option>
+                    <option value="quarterly">季度</option>
+                    <option value="annual">年度</option>
+                    <option value="none">无</option>
+                  </select>
+                </div>
+                <div id="performance-bonus-amount-container-{offerId}">
+                  <label class="label" for="performance-bonus-amount-{offerId}">绩效奖金金额（元）</label>
+                  <input type="number" id="performance-bonus-amount-{offerId}" class="input-field" placeholder="请输入绩效奖金金额">
+                </div>
+                <div>
+                  <label class="label" for="performance-bonus-guaranteed-{offerId}">是否保底</label>
+                  <select id="performance-bonus-guaranteed-{offerId}" class="input-field">
+                    <option value="true">是</option>
+                    <option value="false">否</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+            <div class="card">
+              <h3 class="text-xl font-bold text-gray-900 mb-4">股票/期权</h3>
+              <div class="space-y-4">
+                <div>
+                  <label class="label" for="stock-options-{offerId}">是否有股票/期权</label>
+                  <select id="stock-options-{offerId}" class="input-field">
+                    <option value="yes">是</option>
+                    <option value="no">否</option>
+                  </select>
+                </div>
+                <div id="stock-options-details-container-{offerId}" class="hidden">
+                  <div>
+                    <label class="label" for="stock-options-shares-{offerId}">授予总股数</label>
+                    <input type="number" id="stock-options-shares-{offerId}" class="input-field" placeholder="请输入授予总股数">
+                  </div>
+                  <div>
+                    <label class="label" for="stock-options-vesting-{offerId}">行权期（年）</label>
+                    <input type="number" id="stock-options-vesting-{offerId}" class="input-field" placeholder="请输入行权期" min="1">
+                  </div>
+                  <div>
+                    <label class="label" for="stock-options-price-{offerId}">当前股价（元）</label>
+                    <input type="number" id="stock-options-price-{offerId}" class="input-field" placeholder="请输入当前股价">
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <h3 class="text-xl font-bold text-gray-900 mb-4">补贴与福利</h3>
+              <div class="space-y-4">
+                <div>
+                  <label class="label" for="housing-allowance-{offerId}">住房补贴（元/月）</label>
+                  <input type="number" id="housing-allowance-{offerId}" class="input-field" placeholder="请输入住房补贴">
+                </div>
+                <div>
+                  <label class="label" for="transportation-allowance-{offerId}">交通补贴（元/月）</label>
+                  <input type="number" id="transportation-allowance-{offerId}" class="input-field" placeholder="请输入交通补贴">
+                </div>
+                <div>
+                  <label class="label" for="meal-allowance-{offerId}">餐补（元/月）</label>
+                  <input type="number" id="meal-allowance-{offerId}" class="input-field" placeholder="请输入餐补">
+                </div>
+                <div>
+                  <label class="label" for="other-allowance-{offerId}">其他补贴（元/月）</label>
+                  <input type="number" id="other-allowance-{offerId}" class="input-field" placeholder="请输入其他补贴">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 步骤3：工作条件 -->
+        <div class="step-content hidden" id="step-3">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="card">
+              <h3 class="text-xl font-bold text-gray-900 mb-4">社保公积金</h3>
+              <div class="space-y-4">
+                <div>
+                  <label class="label" for="social-security-base-{offerId}">社保缴纳基数（元）</label>
+                  <input type="number" id="social-security-base-{offerId}" class="input-field" placeholder="请输入社保缴纳基数">
+                </div>
+                <div>
+                  <label class="label" for="housing-fund-base-{offerId}">公积金缴纳基数（元）</label>
+                  <input type="number" id="housing-fund-base-{offerId}" class="input-field" placeholder="请输入公积金缴纳基数">
+                </div>
+                <div>
+                  <label class="label" for="housing-fund-rate-{offerId}">公积金缴纳比例</label>
+                  <select id="housing-fund-rate-{offerId}" class="input-field">
+                    <option value="0.05">5%</option>
+                    <option value="0.06">6%</option>
+                    <option value="0.07">7%</option>
+                    <option value="0.08">8%</option>
+                    <option value="0.09">9%</option>
+                    <option value="0.1">10%</option>
+                    <option value="0.11">11%</option>
+                    <option value="0.12">12%</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="label" for="supplementary-fund-{offerId}">是否有补充公积金</label>
+                  <select id="supplementary-fund-{offerId}" class="input-field">
+                    <option value="no">否</option>
+                    <option value="yes">是</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <h3 class="text-xl font-bold text-gray-900 mb-4">工作时间</h3>
+              <div class="space-y-4">
+                <div>
+                  <label class="label" for="daily-hours-{offerId}">每日工作时长（小时）</label>
+                  <input type="number" id="daily-hours-{offerId}" class="input-field" placeholder="请输入每日工作时长" min="1" max="24">
+                </div>
+                <div>
+                  <label class="label" for="weekend-off-{offerId}">是否双休</label>
+                  <select id="weekend-off-{offerId}" class="input-field">
+                    <option value="yes">是</option>
+                    <option value="no">否</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="label" for="overtime-hours-{offerId}">每月加班小时数</label>
+                  <input type="number" id="overtime-hours-{offerId}" class="input-field" placeholder="请输入每月加班小时数" min="0">
+                </div>
+                <div>
+                  <label class="label" for="overtime-compensation-{offerId}">加班费计算方式</label>
+                  <select id="overtime-compensation-{offerId}" class="input-field">
+                    <option value="1.5">1.5倍时薪</option>
+                    <option value="2">2倍时薪</option>
+                    <option value="3">3倍时薪</option>
+                    <option value="time-off">调休</option>
+                    <option value="none">无</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+            <div class="card">
+              <h3 class="text-xl font-bold text-gray-900 mb-4">主观评分</h3>
+              <div class="space-y-4">
+                <div>
+                  <label class="label" for="career-development-{offerId}">职业发展（0-15分）</label>
+                  <input type="range" id="career-development-{offerId}" class="w-full" min="0" max="15" value="8">
+                  <div class="flex justify-between text-xs text-gray-500">
+                    <span>0</span>
+                    <span>5</span>
+                    <span>10</span>
+                    <span>15</span>
+                  </div>
+                  <div class="text-center mt-1">
+                    <span id="career-development-value-{offerId}" class="text-sm font-medium">8</span>
+                  </div>
+                </div>
+                <div>
+                  <label class="label" for="team-atmosphere-{offerId}">团队氛围（0-10分）</label>
+                  <input type="range" id="team-atmosphere-{offerId}" class="w-full" min="0" max="10" value="5">
+                  <div class="flex justify-between text-xs text-gray-500">
+                    <span>0</span>
+                    <span>5</span>
+                    <span>10</span>
+                  </div>
+                  <div class="text-center mt-1">
+                    <span id="team-atmosphere-value-{offerId}" class="text-sm font-medium">5</span>
+                  </div>
+                </div>
+                <div>
+                  <label class="label" for="interest-match-{offerId}">兴趣匹配度（0-15分）</label>
+                  <input type="range" id="interest-match-{offerId}" class="w-full" min="0" max="15" value="8">
+                  <div class="flex justify-between text-xs text-gray-500">
+                    <span>0</span>
+                    <span>5</span>
+                    <span>10</span>
+                    <span>15</span>
+                  </div>
+                  <div class="text-center mt-1">
+                    <span id="interest-match-value-{offerId}" class="text-sm font-medium">8</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <h3 class="text-xl font-bold text-gray-900 mb-4">其他信息</h3>
+              <div class="space-y-4">
+                <div>
+                  <label class="label" for="remote-work-{offerId}">是否支持远程工作</label>
+                  <select id="remote-work-{offerId}" class="input-field">
+                    <option value="no">否</option>
+                    <option value="partial">部分时间</option>
+                    <option value="full">完全支持</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="label" for="annual-leave-{offerId}">年假天数</label>
+                  <input type="number" id="annual-leave-{offerId}" class="input-field" placeholder="请输入年假天数" min="0">
+                </div>
+                <div>
+                  <label class="label" for="commute-time-{offerId}">通勤时间（分钟）</label>
+                  <input type="number" id="commute-time-{offerId}" class="input-field" placeholder="请输入通勤时间" min="0">
+                </div>
+                <div>
+                  <label class="label" for="notes-{offerId}">其他备注</label>
+                  <textarea id="notes-{offerId}" class="input-field" rows="3" placeholder="请输入其他备注信息"></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 步骤4：对比结果 -->
+        <div class="step-content hidden" id="step-4">
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+          <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">Offer对比结果</h2>
+          <div id="final-verdict" class="bg-yellow-50 border-l-4 border-yellow-400 rounded-lg p-4 flex items-center gap-3 mb-6 hidden">
+            <i class="fa fa-trophy text-yellow-500 text-xl"></i>
+            <div>
+              <p class="text-gray-800 font-semibold" id="verdict-title">加载中...</p>
+              <p class="text-gray-600 text-sm" id="verdict-desc">加载中...</p>
+            </div>
+          </div>
+            
+            <!-- 税后收入对比 -->
+            <div class="mb-8">
+              <h3 class="text-xl font-bold text-gray-900 mb-4">税后收入对比</h3>
+              <div id="income-comparison-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-gray-50 rounded-lg p-4">
+                  <div class="flex justify-between items-center mb-2">
+                    <span class="font-medium text-gray-700">Offer 1</span>
+                    <span class="text-lg font-bold text-primary" id="offer1-after-tax">¥0</span>
+                  </div>
+                  <div class="text-sm text-gray-500 mb-1">税前年收入：<span id="offer1-before-tax">¥0</span></div>
+                  <div class="text-sm text-gray-500">税后月收入：<span id="offer1-monthly-after-tax">¥0</span></div>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-4">
+                  <div class="flex justify-between items-center mb-2">
+                    <span class="font-medium text-gray-700">Offer 2</span>
+                    <span class="text-lg font-bold text-primary" id="offer2-after-tax">¥0</span>
+                  </div>
+                  <div class="text-sm text-gray-500 mb-1">税前年收入：<span id="offer2-before-tax">¥0</span></div>
+                  <div class="text-sm text-gray-500">税后月收入：<span id="offer2-monthly-after-tax">¥0</span></div>
+                </div>
+              </div>
+              <div class="mt-6">
+                <canvas id="salary-comparison-chart" height="250"></canvas>
+              </div>
+            </div>
+            
+            <!-- 薪资构成对比 -->
+            <div class="mb-8">
+              <h3 class="text-xl font-bold text-gray-900 mb-4">薪资构成对比</h3>
+              <div id="composition-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h4 class="font-medium text-gray-700 mb-2">Offer 1</h4>
+                  <canvas id="offer1-salary-composition-chart" height="250"></canvas>
+                </div>
+                <div>
+                  <h4 class="font-medium text-gray-700 mb-2">Offer 2</h4>
+                  <canvas id="offer2-salary-composition-chart" height="250"></canvas>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 综合评分对比 -->
+            <div class="mb-8">
+              <h3 class="text-xl font-bold text-gray-900 mb-4">综合评分对比</h3>
+              <div id="scores-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div class="bg-gray-50 rounded-lg p-4">
+                  <div class="flex justify-between items-center mb-2">
+                    <span class="font-medium text-gray-700">Offer 1</span>
+                    <span class="text-lg font-bold text-primary" id="offer1-total-score">0</span>
+                  </div>
+                  <div class="h-2 bg-gray-200 rounded-full mt-2">
+                    <div class="h-2 bg-primary rounded-full" id="offer1-score-bar" style="width: 0%"></div>
+                  </div>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-4">
+                  <div class="flex justify-between items-center mb-2">
+                    <span class="font-medium text-gray-700">Offer 2</span>
+                    <span class="text-lg font-bold text-primary" id="offer2-total-score">0</span>
+                  </div>
+                  <div class="h-2 bg-gray-200 rounded-full mt-2">
+                    <div class="h-2 bg-primary rounded-full" id="offer2-score-bar" style="width: 0%"></div>
+                  </div>
+                </div>
+              </div>
+            <div class="mt-6">
+              <canvas id="score-radar-chart" height="300"></canvas>
+            </div>
+          </div>
+            
+            <!-- 优劣势分析 -->
+            <div class="mb-8">
+              <h3 class="text-xl font-bold text-gray-900 mb-4">优劣势分析</h3>
+              <div id="analysis-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-gray-50 rounded-lg p-4">
+                  <h4 class="font-medium text-gray-700 mb-2">Offer 1 优势</h4>
+                  <ul class="list-disc list-inside text-gray-600 space-y-1" id="offer1-advantages">
+                    <li>加载中...</li>
+                  </ul>
+                  <h4 class="font-medium text-gray-700 mt-4 mb-2">Offer 1 劣势</h4>
+                  <ul class="list-disc list-inside text-gray-600 space-y-1" id="offer1-disadvantages">
+                    <li>加载中...</li>
+                  </ul>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-4">
+                  <h4 class="font-medium text-gray-700 mb-2">Offer 2 优势</h4>
+                  <ul class="list-disc list-inside text-gray-600 space-y-1" id="offer2-advantages">
+                    <li>加载中...</li>
+                  </ul>
+                  <h4 class="font-medium text-gray-700 mt-4 mb-2">Offer 2 劣势</h4>
+                  <ul class="list-disc list-inside text-gray-600 space-y-1" id="offer2-disadvantages">
+                    <li>加载中...</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 个性化建议 -->
+            <div class="mb-8">
+              <h3 class="text-xl font-bold text-gray-900 mb-4">个性化建议</h3>
+              <div class="bg-blue-50 border-l-4 border-primary rounded-lg p-4">
+                <p class="text-gray-700" id="personalized-advice">加载中...</p>
+              </div>
+            </div>
+            
+            <!-- 操作按钮 -->
+            <div class="flex flex-wrap gap-4 justify-center mt-8">
+              <button id="btn-back-to-step-3" class="btn btn-outline">返回修改</button>
+              <button id="btn-save-report" class="btn btn-secondary">保存报告</button>
+              <button id="btn-download-image" class="btn btn-primary">下载图片报告</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 步骤导航按钮 -->
+      <div class="flex justify-between mt-8">
+        <button id="btn-prev-step" class="btn btn-outline hidden">
+          <i class="fa fa-arrow-left mr-2"></i>上一步
+        </button>
+        <button id="btn-next-step" class="btn btn-primary">
+          下一步<i class="fa fa-arrow-right ml-2"></i>
+        </button>
+      </div>
+    </section>
+
+    <!-- 报告列表内容 -->
+    <section id="section-reports" class="hidden space-y-8">
+      <div class="bg-white rounded-lg shadow-lg p-6">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">我的报告</h2>
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">报告名称</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">创建时间</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">对比Offer数量</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200" id="reports-table-body">
+              <tr>
+                <td colspan="4" class="px-6 py-4 text-center text-gray-500">暂无保存的报告</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 帮助内容 -->
+    <section id="section-help" class="hidden space-y-8">
+      <div class="bg-white rounded-lg shadow-lg p-6">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">使用帮助</h2>
+        
+        <div class="space-y-6">
+          <div>
+            <h3 class="text-xl font-bold text-gray-900 mb-2">如何使用Offer对比工具？</h3>
+            <ol class="list-decimal list-inside text-gray-600 space-y-2">
+              <li>点击"开始对比"按钮进入对比页面</li>
+              <li>在步骤1中填写基本信息，包括公司名称、岗位、城市等</li>
+              <li>在步骤2中填写薪资结构，包括基本工资、奖金、股票期权等</li>
+              <li>在步骤3中填写工作条件，包括社保公积金、工作时间等</li>
+              <li>完成所有步骤后，系统会自动计算并展示对比结果</li>
+              <li>您可以保存或下载对比报告，便于后续查看和分享</li>
+            </ol>
+          </div>
+          
+          <div>
+            <h3 class="text-xl font-bold text-gray-900 mb-2">税后收入如何计算？</h3>
+            <p class="text-gray-600 mb-2">税后收入计算考虑以下因素：</p>
+            <ul class="list-disc list-inside text-gray-600 space-y-1">
+              <li>基本工资、奖金、补贴等税前收入总和</li>
+              <li>社保公积金个人缴纳部分</li>
+              <li>个人所得税（根据最新税法计算）</li>
+              <li>城市差异（不同城市的社保公积金政策不同）</li>
+            </ul>
+          </div>
+          
+          <div>
+            <h3 class="text-xl font-bold text-gray-900 mb-2">综合评分如何计算？</h3>
+            <p class="text-gray-600 mb-2">综合评分由以下维度构成：</p>
+            <ul class="list-disc list-inside text-gray-600 space-y-1">
+              <li>薪资竞争力（20分）：税后收入在同行业/同城市的排名</li>
+              <li>福利完善度（15分）：社保公积金缴纳比例、补充商业保险等</li>
+              <li>工作强度（15分）：加班频率、节假日是否正常休息</li>
+              <li>城市宜居性（10分）：根据房价、交通、教育资源、空气质量等数据打分</li>
+              <li>职业发展（15分）：公司平台、晋升空间、培训机会</li>
+              <li>团队氛围（10分）：通过用户评价或调研数据估算</li>
+              <li>个人兴趣匹配度（15分）：用户自评</li>
+            </ul>
+          </div>
+          
+          <div>
+            <h3 class="text-xl font-bold text-gray-900 mb-2">数据安全与隐私</h3>
+            <p class="text-gray-600">所有数据仅存储在您的本地浏览器中，不会上传至服务器。您可以随时清除浏览器数据来删除已保存的信息。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- 页脚 -->
+  <footer class="bg-gray-800 text-white py-8">
+    <div class="container mx-auto px-4">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div>
+          <h3 class="text-lg font-bold mb-4">Offer对比工具</h3>
+          <p class="text-gray-400">智能薪资分析与决策助手，助你做出明智职业选择。</p>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold mb-4">快速链接</h3>
+          <ul class="space-y-2">
+            <li><a href="#" class="text-gray-400 hover:text-white transition-all-300">首页</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white transition-all-300">开始对比</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white transition-all-300">我的报告</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white transition-all-300">使用帮助</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold mb-4">联系我们</h3>
+          <ul class="space-y-2">
+            <li class="flex items-center text-gray-400">
+              <i class="fa fa-envelope mr-2"></i>
+              <span>contact@offercompare.com</span>
+            </li>
+            <li class="flex items-center text-gray-400">
+              <i class="fa fa-github mr-2"></i>
+              <span>github.com/offercompare</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="border-t border-gray-700 mt-8 pt-6 text-center text-gray-400">
+        <p>© 2025 Offer对比工具. 保留所有权利.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- JavaScript -->
+  <script>
+    // 城市数据
+    const cityData = {
+      beijing: {
+        name: "北京",
+        socialSecurity: {
+          upperLimit: 35811,
+          lowerLimit: 2540
+        },
+        housingFund: {
+          upperLimit: 35811,
+          lowerLimit: 2540
+        },
+        livabilityScore: 8.2,
+        costOfLiving: 1.8,
+        housingPrice: 1.9,
+        transportation: 8.5,
+        education: 9.8,
+        healthcare: 9.5,
+        environment: 7.0
+      },
+      shanghai: {
+        name: "上海",
+        socialSecurity: {
+          upperLimit: 37302,
+          lowerLimit: 2690
+        },
+        housingFund: {
+          upperLimit: 37302,
+          lowerLimit: 2690
+        },
+        livabilityScore: 8.5,
+        costOfLiving: 1.7,
+        housingPrice: 1.8,
+        transportation: 9.0,
+        education: 9.5,
+        healthcare: 9.6,
+        environment: 7.2
+      },
+      guangzhou: {
+        name: "广州",
+        socialSecurity: {
+          upperLimit: 34890,
+          lowerLimit: 2360
+        },
+        housingFund: {
+          upperLimit: 34890,
+          lowerLimit: 2360
+        },
+        livabilityScore: 8.7,
+        costOfLiving: 1.4,
+        housingPrice: 1.5,
+        transportation: 8.8,
+        education: 9.0,
+        healthcare: 9.2,
+        environment: 7.8
+      },
+      shenzhen: {
+        name: "深圳",
+        socialSecurity: {
+          upperLimit: 27549,
+          lowerLimit: 4775
+        },
+        housingFund: {
+          upperLimit: 27549,
+          lowerLimit: 4775
+        },
+        livabilityScore: 8.6,
+        costOfLiving: 1.6,
+        housingPrice: 1.7,
+        transportation: 8.7,
+        education: 8.5,
+        healthcare: 8.8,
+        environment: 8.0
+      },
+      hangzhou: {
+        name: "杭州",
+        socialSecurity: {
+          upperLimit: 33642,
+          lowerLimit: 2280
+        },
+        housingFund: {
+          upperLimit: 33642,
+          lowerLimit: 2280
+        },
+        livabilityScore: 8.8,
+        costOfLiving: 1.3,
+        housingPrice: 1.4,
+        transportation: 8.5,
+        education: 8.6,
+        healthcare: 8.7,
+        environment: 8.2
+      },
+      nanjing: {
+        name: "南京",
+        socialSecurity: {
+          upperLimit: 31200,
+          lowerLimit: 2280
+        },
+        housingFund: {
+          upperLimit: 31200,
+          lowerLimit: 2280
+        },
+        livabilityScore: 8.4,
+        costOfLiving: 1.2,
+        housingPrice: 1.3,
+        transportation: 8.3,
+        education: 8.8,
+        healthcare: 8.6,
+        environment: 7.9
+      },
+      chengdu: {
+        name: "成都",
+        socialSecurity: {
+          upperLimit: 29700,
+          lowerLimit: 2100
+        },
+        housingFund: {
+          upperLimit: 29700,
+          lowerLimit: 2100
+        },
+        livabilityScore: 8.9,
+        costOfLiving: 1.0,
+        housingPrice: 1.1,
+        transportation: 8.2,
+        education: 8.4,
+        healthcare: 8.5,
+        environment: 8.1
+      },
+      wuhan: {
+        name: "武汉",
+        socialSecurity: {
+          upperLimit: 29500,
+          lowerLimit: 2010
+        },
+        housingFund: {
+          upperLimit: 29500,
+          lowerLimit: 2010
+        },
+        livabilityScore: 8.3,
+        costOfLiving: 1.0,
+        housingPrice: 1.1,
+        transportation: 8.4,
+        education: 8.5,
+        healthcare: 8.4,
+        environment: 7.8
+      },
+      chongqing: {
+        name: "重庆",
+        socialSecurity: {
+          upperLimit: 28500,
+          lowerLimit: 2100
+        },
+        housingFund: {
+          upperLimit: 28500,
+          lowerLimit: 2100
+        },
+        livabilityScore: 8.2,
+        costOfLiving: 0.9,
+        housingPrice: 1.0,
+        transportation: 8.1,
+        education: 8.2,
+        healthcare: 8.3,
+        environment: 7.7
+      },
+      other: {
+        name: "其他城市",
+        socialSecurity: {
+          upperLimit: 25000,
+          lowerLimit: 2000
+        },
+        housingFund: {
+          upperLimit: 25000,
+          lowerLimit: 2000
+        },
+        livabilityScore: 7.5,
+        costOfLiving: 0.9,
+        housingPrice: 0.9,
+        transportation: 7.8,
+        education: 7.9,
+        healthcare: 8.0,
+        environment: 7.6
+      }
+    };
+
+    // 社保公积金缴纳比例
+    const socialSecurityRates = {
+      pension: 0.08,    // 养老保险个人比例
+      medical: 0.02,    // 医疗保险个人比例
+      unemployment: 0.005, // 失业保险个人比例
+      injury: 0,        // 工伤保险个人比例
+      maternity: 0,     // 生育保险个人比例
+      total: 0.105      // 个人社保总比例
+    };
+
+    // 个税计算税率表
+    const taxRateTable = [
+      { min: 0, max: 36000, rate: 0.03, quickDeduction: 0 },
+      { min: 36000, max: 144000, rate: 0.1, quickDeduction: 2520 },
+      { min: 144000, max: 300000, rate: 0.2, quickDeduction: 16920 },
+      { min: 300000, max: 420000, rate: 0.25, quickDeduction: 31920 },
+      { min: 420000, max: 660000, rate: 0.3, quickDeduction: 52920 },
+      { min: 660000, max: 960000, rate: 0.35, quickDeduction: 85920 },
+      { min: 960000, max: Infinity, rate: 0.45, quickDeduction: 181920 }
+    ];
+
+    // DOM元素
+    const navLinks = {
+      home: document.getElementById('nav-home'),
+      compare: document.getElementById('nav-compare'),
+      reports: document.getElementById('nav-reports'),
+      help: document.getElementById('nav-help')
+    };
+
+    const sections = {
+      home: document.getElementById('section-home'),
+      compare: document.getElementById('section-compare'),
+      reports: document.getElementById('section-reports'),
+      help: document.getElementById('section-help')
+    };
+
+    const btnStartCompare = document.getElementById('btn-start-compare');
+    const btnWatchDemo = document.getElementById('btn-watch-demo');
+    const btnNextStep = document.getElementById('btn-next-step');
+    const btnPrevStep = document.getElementById('btn-prev-step');
+    const btnBackToStep3 = document.getElementById('btn-back-to-step-3');
+    const btnSaveReport = document.getElementById('btn-save-report');
+    const btnDownloadImage = document.getElementById('btn-download-image');
+
+    const steps = document.querySelectorAll('.step');
+    const stepContents = document.querySelectorAll('.step-content');
+
+    // 当前状态
+    let currentStep = 1;
+    let currentOffer = 1;
+    let offers = {};
+    let maxOfferId = 2; // 默认支持2个Offer
+    let reports = JSON.parse(localStorage.getItem('offerCompareReports')) || [];
+    let stepTemplates = {};
+    function updateVisitorCount() {
+      const hostname = location.hostname || '';
+      const isLocal = hostname === 'localhost' || hostname === '127.0.0.1' || location.protocol === 'file:';
+      const badge = document.getElementById('visitor-badge');
+      const countEl = document.getElementById('visitor-count');
+      const visited = localStorage.getItem('offerCompareVisited') === '1';
+      if (isLocal || !navigator.onLine) {
+        let val = parseInt(localStorage.getItem('offerCompareLocalVisits') || '0', 10);
+        if (!visited) {
+          val += 1;
+          localStorage.setItem('offerCompareVisited', '1');
+        }
+        localStorage.setItem('offerCompareLocalVisits', String(val));
+        if (badge && countEl) {
+          countEl.textContent = val;
+        }
+        return;
+      }
+      const host = hostname.replace(/[^a-z0-9\-\.]/gi, '').replace(/\./g, '-') || 'site';
+      const namespace = 'offer-compare-tool-' + host;
+      const key = 'visitors';
+      const url = visited ? `https://api.countapi.xyz/get/${namespace}/${key}` : `https://api.countapi.xyz/hit/${namespace}/${key}`;
+      fetch(url).then(r => r.json()).then(d => {
+        const value = d.value || d.count || 0;
+        if (badge && countEl) {
+          countEl.textContent = value;
+        }
+        if (!visited) localStorage.setItem('offerCompareVisited', '1');
+      }).catch(() => {
+        let val = parseInt(localStorage.getItem('offerCompareLocalVisits') || '0', 10);
+        if (!visited) {
+          val += 1;
+          localStorage.setItem('offerCompareVisited', '1');
+        }
+        localStorage.setItem('offerCompareLocalVisits', String(val));
+        if (badge && countEl) {
+          countEl.textContent = val;
+        }
+      });
+    }
+
+    // 初始化
+    function init() {
+      // 导航切换
+      navLinks.home.addEventListener('click', (e) => {
+        e.preventDefault();
+        showSection('home');
+      });
+
+      navLinks.compare.addEventListener('click', (e) => {
+        e.preventDefault();
+        showSection('compare');
+      });
+
+      navLinks.reports.addEventListener('click', (e) => {
+        e.preventDefault();
+        showSection('reports');
+        loadReports();
+      });
+
+      navLinks.help.addEventListener('click', (e) => {
+        e.preventDefault();
+        showSection('help');
+      });
+
+      // 首页按钮
+      btnStartCompare.addEventListener('click', () => {
+        showSection('compare');
+      });
+
+      btnWatchDemo.addEventListener('click', () => {
+        alert('演示视频即将上线，敬请期待！');
+      });
+
+      // 步骤导航
+      btnNextStep.addEventListener('click', nextStep);
+      btnPrevStep.addEventListener('click', prevStep);
+      btnBackToStep3.addEventListener('click', () => {
+        goToStep(3);
+      });
+
+      // 使用事件委托为Offer标签容器添加点击事件
+      const offerTabsContainer = document.querySelector('.flex.border-b');
+      offerTabsContainer.addEventListener('click', handleOfferTabClick);
+      
+      function handleOfferTabClick(event) {
+        const tab = event.target.closest('.offer-tab[data-offer]');
+        if (!tab) return;
+        const offerId = parseInt(tab.dataset.offer);
+        if (event.target && event.target.dataset && event.target.dataset.delete === 'true') {
+          deleteOffer(offerId);
+          return;
+        }
+        switchOffer(offerId);
+      }
+      
+      // 为了向后兼容，保留bindOfferTabEvents函数但简化实现
+      
+      // 添加Offer按钮
+      document.getElementById('add-offer-btn').addEventListener('click', addNewOffer);
+
+      // 表单事件
+      setupFormEvents();
+
+      // 报告按钮
+      btnSaveReport.addEventListener('click', saveReport);
+      btnDownloadImage.addEventListener('click', downloadImageReport);
+
+      // 加载保存的报告
+      loadReports();
+
+      steps.forEach((stepEl, index) => {
+        stepEl.classList.add('cursor-pointer');
+        stepEl.addEventListener('click', () => {
+          saveStepData(currentStep);
+          goToStep(index + 1);
+        });
+      });
+    }
+
+    // 显示指定部分
+    function showSection(sectionId) {
+      Object.keys(sections).forEach(id => {
+        sections[id].classList.add('hidden');
+      });
+      sections[sectionId].classList.remove('hidden');
+
+      // 更新导航状态
+      Object.keys(navLinks).forEach(id => {
+        navLinks[id].classList.remove('text-primary', 'font-medium');
+        navLinks[id].classList.add('text-gray-600');
+      });
+      navLinks[sectionId].classList.remove('text-gray-600');
+      navLinks[sectionId].classList.add('text-primary', 'font-medium');
+      
+      // 如果切换到对比页面，初始化表单
+      if (sectionId === 'compare') {
+        // 重新生成表单
+        generateOfferForm(currentOffer);
+        refreshOfferTabLabels();
+      }
+    }
+
+    function refreshOfferTabLabels() {
+      document.querySelectorAll('.offer-tab[data-offer]').forEach(tab => {
+        const id = parseInt(tab.dataset.offer);
+        const labelEl = tab.querySelector('.offer-label');
+        if (labelEl) {
+          const name = offers[id]?.companyName || `Offer ${id}`;
+          labelEl.textContent = name;
+        }
+      });
+    }
+
+    // 下一步
+    function nextStep() {
+      // 验证当前步骤表单
+      if (!validateStep(currentStep)) {
+        return;
+      }
+
+      // 保存当前步骤数据
+      saveStepData(currentStep);
+
+      if (currentStep < 4) {
+        currentStep++;
+        goToStep(currentStep);
+      } else {
+        // 计算结果
+        calculateResults();
+      }
+    }
+
+    // 上一步
+    function prevStep() {
+      if (currentStep > 1) {
+        currentStep--;
+        goToStep(currentStep);
+      }
+    }
+
+    // 跳转到指定步骤
+    function goToStep(step) {
+      currentStep = step;
+
+      // 更新步骤指示器
+      steps.forEach((stepEl, index) => {
+        const stepNum = index + 1;
+        const circle = stepEl.querySelector('div');
+
+        if (stepNum < currentStep) {
+          circle.classList.remove('step-active', 'step-pending');
+          circle.classList.add('step-completed');
+        } else if (stepNum === currentStep) {
+          circle.classList.remove('step-completed', 'step-pending');
+          circle.classList.add('step-active');
+        } else {
+          circle.classList.remove('step-completed', 'step-active');
+          circle.classList.add('step-pending');
+        }
+      });
+
+      // 显示当前步骤内容
+      stepContents.forEach((content, index) => {
+        if (index + 1 === currentStep) {
+          content.classList.remove('hidden');
+        } else {
+          content.classList.add('hidden');
+        }
+      });
+
+      // 更新导航按钮
+      if (currentStep === 1) {
+        btnPrevStep.classList.add('hidden');
+      } else {
+        btnPrevStep.classList.remove('hidden');
+      }
+
+      if (currentStep === 4) {
+        btnNextStep.innerHTML = '重新计算';
+      } else {
+        btnNextStep.innerHTML = '下一步<i class="fa fa-arrow-right ml-2"></i>';
+      }
+
+      // 生成当前步骤的表单
+      generateOfferForm(currentOffer);
+
+      // 进入结果页时自动计算
+      if (currentStep === 4) {
+        calculateResults();
+        bindStep4Actions();
+      }
+    }
+
+    function bindStep4Actions() {
+      const saveBtn = document.getElementById('btn-save-report');
+      if (saveBtn && !saveBtn.dataset.bound) {
+        saveBtn.addEventListener('click', saveReport);
+        saveBtn.dataset.bound = '1';
+      }
+      const imgBtn = document.getElementById('btn-download-image');
+      if (imgBtn && !imgBtn.dataset.bound) {
+        imgBtn.addEventListener('click', downloadImageReport);
+        imgBtn.dataset.bound = '1';
+      }
+      const backBtn = document.getElementById('btn-back-to-step-3');
+      if (backBtn && !backBtn.dataset.bound) {
+        backBtn.addEventListener('click', () => goToStep(3));
+        backBtn.dataset.bound = '1';
+      }
+    }
+
+    // 切换Offer
+    function switchOffer(offerId) {
+      // 保存当前Offer数据
+      saveOfferData(currentOffer);
+
+      currentOffer = offerId;
+
+      // 更新标签状态
+      document.querySelectorAll('.offer-tab').forEach(tab => {
+        const tabOfferId = parseInt(tab.dataset.offer);
+        if (tabOfferId === currentOffer) {
+          tab.classList.remove('tab-inactive');
+          tab.classList.add('tab-active');
+        } else {
+          tab.classList.remove('tab-active');
+          tab.classList.add('tab-inactive');
+        }
+      });
+
+      // 生成新Offer的表单
+      generateOfferForm(currentOffer);
+    }
+    
+    // 添加新Offer
+    function addNewOffer() {
+      const offerTabsContainer = document.querySelector('.flex.border-b');
+      const currentCount = offerTabsContainer.querySelectorAll('.offer-tab[data-offer]').length;
+      const nextId = currentCount + 1;
+      offers[nextId] = {};
+      const newOfferTab = document.createElement('button');
+      newOfferTab.className = 'offer-tab tab-inactive px-4 py-2 font-medium';
+      newOfferTab.dataset.offer = nextId;
+      newOfferTab.innerHTML = `<span class="offer-label">Offer ${nextId}</span>
+        <i class="fa fa-times ml-2 text-gray-400 hover:text-red-500" title="删除" data-delete="true"></i>`;
+      const addOfferBtn = document.getElementById('add-offer-btn');
+      offerTabsContainer.insertBefore(newOfferTab, addOfferBtn);
+      maxOfferId = nextId;
+      switchOffer(nextId);
+      setupFormEvents();
+    }
+
+    // 删除Offer
+    function deleteOffer(offerId) {
+      const tabs = document.querySelectorAll('.offer-tab[data-offer]');
+      if (tabs.length <= 1) {
+        alert('至少保留一个Offer');
+        return;
+      }
+      const tabEl = document.querySelector(`.offer-tab[data-offer="${offerId}"]`);
+      if (!tabEl) return;
+      delete offers[offerId];
+      localStorage.setItem('offerCompareOffers', JSON.stringify(offers));
+      tabEl.remove();
+      renumberOffers();
+      const remainingTabs = document.querySelectorAll('.offer-tab[data-offer]');
+      const firstTab = remainingTabs[0];
+      const fallbackId = parseInt(firstTab.dataset.offer);
+      switchOffer(fallbackId);
+      if (currentStep === 4) {
+        const validCount = Object.keys(offers).filter(k => offers[k] && offers[k].baseSalary).length;
+        if (validCount >= 2) {
+          calculateResults();
+        }
+      }
+    }
+
+    function renumberOffers() {
+      const tabs = Array.from(document.querySelectorAll('.offer-tab[data-offer]'));
+      const newOffers = {};
+      tabs.forEach((tab, idx) => {
+        const oldId = parseInt(tab.dataset.offer);
+        const newId = idx + 1;
+        tab.dataset.offer = newId.toString();
+        const labelEl = tab.querySelector('.offer-label');
+        const name = offers[oldId]?.companyName || `Offer ${newId}`;
+        if (labelEl) labelEl.textContent = name;
+        if (offers[oldId]) newOffers[newId] = offers[oldId];
+      });
+      offers = newOffers;
+      maxOfferId = tabs.length;
+      localStorage.setItem('offerCompareOffers', JSON.stringify(offers));
+    }
+
+    // 生成Offer表单
+    function generateOfferForm(offerId) {
+      // 获取当前步骤的内容
+      const currentStepContent = document.getElementById(`step-${currentStep}`);
+      
+      if (!currentStepContent) return;
+      
+      // 使用初始模板生成表单，避免重复替换导致ID不更新
+      const templateHtml = stepTemplates[currentStep];
+      if (!templateHtml) return;
+      const newHtml = templateHtml.replace(/\{offerId\}/g, offerId);
+      
+      // 更新当前步骤内容
+      currentStepContent.innerHTML = newHtml;
+      
+      // 加载当前步骤的数据
+      loadStepData(currentStep);
+      
+      // 设置表单事件
+      setupFormEvents();
+    }
+    
+    // 设置表单事件
+    function setupFormEvents() {
+      const offerId = currentOffer;
+      const companyNameInput = document.getElementById(`company-name-${offerId}`);
+      if (companyNameInput) {
+        companyNameInput.addEventListener('input', function() {
+          const name = this.value.trim();
+          if (!offers[offerId]) {
+            offers[offerId] = {};
+          }
+          offers[offerId].companyName = name;
+          localStorage.setItem('offerCompareOffers', JSON.stringify(offers));
+          const tab = document.querySelector(`.offer-tab[data-offer="${offerId}"]`);
+          if (tab) {
+            const labelEl = tab.querySelector('.offer-label');
+            if (labelEl) {
+              labelEl.textContent = name || `Offer ${offerId}`;
+            }
+          }
+          if (currentStep === 4) {
+            let validCount = 0;
+            for (let i = 1; i <= maxOfferId; i++) {
+              if (offers[i] && offers[i].baseSalary) validCount++;
+            }
+            if (validCount >= 2) {
+              calculateResults();
+            }
+          }
+        });
+      }
+      
+      // 年终奖类型切换
+      const annualBonusType = document.getElementById(`annual-bonus-type-${offerId}`);
+      if (annualBonusType) {
+        annualBonusType.addEventListener('change', function() {
+          const amountContainer = document.getElementById(`annual-bonus-amount-container-${offerId}`);
+          const rateContainer = document.getElementById(`annual-bonus-rate-container-${offerId}`);
+          
+          if (this.value === 'fixed') {
+            amountContainer.classList.remove('hidden');
+            rateContainer.classList.add('hidden');
+          } else if (this.value === 'variable') {
+            amountContainer.classList.add('hidden');
+            rateContainer.classList.remove('hidden');
+          } else {
+            amountContainer.classList.add('hidden');
+            rateContainer.classList.add('hidden');
+          }
+        });
+      }
+
+      // 绩效奖金频率切换
+      const performanceBonusFrequency = document.getElementById(`performance-bonus-frequency-${offerId}`);
+      if (performanceBonusFrequency) {
+        performanceBonusFrequency.addEventListener('change', function() {
+          const container = document.getElementById(`performance-bonus-amount-container-${offerId}`);
+          if (this.value === 'none') {
+            container.classList.add('hidden');
+          } else {
+            container.classList.remove('hidden');
+          }
+        });
+      }
+
+      // 股票期权切换
+      const stockOptions = document.getElementById(`stock-options-${offerId}`);
+      if (stockOptions) {
+        stockOptions.addEventListener('change', function() {
+          const container = document.getElementById(`stock-options-details-container-${offerId}`);
+          if (this.value === 'yes') {
+            container.classList.remove('hidden');
+          } else {
+            container.classList.add('hidden');
+          }
+        });
+      }
+
+      // 主观评分滑块
+      const careerDevelopment = document.getElementById(`career-development-${offerId}`);
+      if (careerDevelopment) {
+        careerDevelopment.addEventListener('input', function() {
+          document.getElementById(`career-development-value-${offerId}`).textContent = this.value;
+        });
+      }
+
+      const teamAtmosphere = document.getElementById(`team-atmosphere-${offerId}`);
+      if (teamAtmosphere) {
+        teamAtmosphere.addEventListener('input', function() {
+          document.getElementById(`team-atmosphere-value-${offerId}`).textContent = this.value;
+        });
+      }
+
+      const interestMatch = document.getElementById(`interest-match-${offerId}`);
+      if (interestMatch) {
+        interestMatch.addEventListener('input', function() {
+          document.getElementById(`interest-match-value-${offerId}`).textContent = this.value;
+        });
+      }
+    }
+
+    // 验证当前步骤表单
+    function validateStep(step) {
+      let isValid = true;
+      const offerId = currentOffer;
+
+      if (step === 1) {
+        // 基本信息验证
+        const companyName = document.getElementById(`company-name-${offerId}`).value;
+        const position = document.getElementById(`position-${offerId}`).value;
+        const city = document.getElementById(`city-${offerId}`).value;
+        const startDate = document.getElementById(`start-date-${offerId}`).value;
+
+        if (!companyName) {
+          alert('请输入公司名称');
+          isValid = false;
+        } else if (!position) {
+          alert('请输入岗位名称');
+          isValid = false;
+        } else if (!city) {
+          alert('请选择工作城市');
+          isValid = false;
+        } else if (!startDate) {
+          alert('请选择入职时间');
+          isValid = false;
+        }
+      } else if (step === 2) {
+        // 薪资结构验证
+        const baseSalary = document.getElementById(`base-salary-${offerId}`).value;
+        
+        if (!baseSalary || baseSalary <= 0) {
+          alert('请输入有效的基本工资');
+          isValid = false;
+        }
+      } else if (step === 3) {
+        // 工作条件验证
+        const socialSecurityBase = document.getElementById(`social-security-base-${offerId}`).value;
+        const housingFundBase = document.getElementById(`housing-fund-base-${offerId}`).value;
+        const dailyHours = document.getElementById(`daily-hours-${offerId}`).value;
+        
+        if (!socialSecurityBase || socialSecurityBase <= 0) {
+          alert('请输入有效的社保缴纳基数');
+          isValid = false;
+        } else if (!housingFundBase || housingFundBase <= 0) {
+          alert('请输入有效的公积金缴纳基数');
+          isValid = false;
+        } else if (!dailyHours || dailyHours <= 0 || dailyHours > 24) {
+          alert('请输入有效的每日工作时长');
+          isValid = false;
+        }
+      }
+
+      return isValid;
+    }
+
+    // 保存当前步骤数据
+    function saveStepData(step) {
+      const offerId = currentOffer;
+      if (!offers[offerId]) {
+        offers[offerId] = {};
+      }
+
+      if (step === 1) {
+        // 基本信息
+        offers[offerId].companyName = document.getElementById(`company-name-${offerId}`).value;
+        offers[offerId].position = document.getElementById(`position-${offerId}`).value;
+        offers[offerId].city = document.getElementById(`city-${offerId}`).value;
+        offers[offerId].startDate = document.getElementById(`start-date-${offerId}`).value;
+        offers[offerId].contractYears = document.getElementById(`contract-years-${offerId}`).value;
+        offers[offerId].probationMonths = document.getElementById(`probation-months-${offerId}`).value;
+        offers[offerId].probationSalaryRate = document.getElementById(`probation-salary-rate-${offerId}`).value;
+      } else if (step === 2) {
+        // 薪资结构
+        offers[offerId].baseSalary = parseFloat(document.getElementById(`base-salary-${offerId}`).value);
+        offers[offerId].annualBonusType = document.getElementById(`annual-bonus-type-${offerId}`).value;
+        
+        if (offers[offerId].annualBonusType === 'fixed') {
+          offers[offerId].annualBonusAmount = parseFloat(document.getElementById(`annual-bonus-amount-${offerId}`).value || 0);
+        } else if (offers[offerId].annualBonusType === 'variable') {
+          offers[offerId].annualBonusRate = parseFloat(document.getElementById(`annual-bonus-rate-${offerId}`).value || 0);
+        }
+        
+        offers[offerId].performanceBonusFrequency = document.getElementById(`performance-bonus-frequency-${offerId}`).value;
+        if (offers[offerId].performanceBonusFrequency !== 'none') {
+          offers[offerId].performanceBonusAmount = parseFloat(document.getElementById(`performance-bonus-amount-${offerId}`).value || 0);
+        }
+        offers[offerId].performanceBonusGuaranteed = document.getElementById(`performance-bonus-guaranteed-${offerId}`).value === 'true';
+        
+        offers[offerId].stockOptions = document.getElementById(`stock-options-${offerId}`).value === 'yes';
+        if (offers[offerId].stockOptions) {
+          offers[offerId].stockOptionsShares = parseFloat(document.getElementById(`stock-options-shares-${offerId}`).value || 0);
+          offers[offerId].stockOptionsVesting = parseFloat(document.getElementById(`stock-options-vesting-${offerId}`).value || 0);
+          offers[offerId].stockOptionsPrice = parseFloat(document.getElementById(`stock-options-price-${offerId}`).value || 0);
+        }
+        
+        offers[offerId].housingAllowance = parseFloat(document.getElementById(`housing-allowance-${offerId}`).value || 0);
+        offers[offerId].transportationAllowance = parseFloat(document.getElementById(`transportation-allowance-${offerId}`).value || 0);
+        offers[offerId].mealAllowance = parseFloat(document.getElementById(`meal-allowance-${offerId}`).value || 0);
+        offers[offerId].otherAllowance = parseFloat(document.getElementById(`other-allowance-${offerId}`).value || 0);
+      } else if (step === 3) {
+        // 工作条件
+        offers[offerId].socialSecurityBase = parseFloat(document.getElementById(`social-security-base-${offerId}`).value);
+        offers[offerId].housingFundBase = parseFloat(document.getElementById(`housing-fund-base-${offerId}`).value);
+        offers[offerId].housingFundRate = parseFloat(document.getElementById(`housing-fund-rate-${offerId}`).value);
+        offers[offerId].supplementaryFund = document.getElementById(`supplementary-fund-${offerId}`).value === 'yes';
+        
+        offers[offerId].dailyHours = parseFloat(document.getElementById(`daily-hours-${offerId}`).value);
+        offers[offerId].weekendOff = document.getElementById(`weekend-off-${offerId}`).value === 'yes';
+        offers[offerId].overtimeHours = parseFloat(document.getElementById(`overtime-hours-${offerId}`).value || 0);
+        offers[offerId].overtimeCompensation = document.getElementById(`overtime-compensation-${offerId}`).value;
+        
+        offers[offerId].careerDevelopment = parseInt(document.getElementById(`career-development-${offerId}`).value);
+        offers[offerId].teamAtmosphere = parseInt(document.getElementById(`team-atmosphere-${offerId}`).value);
+        offers[offerId].interestMatch = parseInt(document.getElementById(`interest-match-${offerId}`).value);
+        
+        offers[offerId].remoteWork = document.getElementById(`remote-work-${offerId}`).value;
+        offers[offerId].annualLeave = parseInt(document.getElementById(`annual-leave-${offerId}`).value || 0);
+        offers[offerId].commuteTime = parseInt(document.getElementById(`commute-time-${offerId}`).value || 0);
+        offers[offerId].notes = document.getElementById(`notes-${offerId}`).value;
+      }
+
+      // 保存到本地存储
+      localStorage.setItem('offerCompareOffers', JSON.stringify(offers));
+    }
+
+    // 加载当前步骤数据
+    function loadStepData(step) {
+      const offerId = currentOffer;
+      const offerData = offers[offerId] || {};
+
+      if (step === 1) {
+        // 基本信息
+        document.getElementById(`company-name-${offerId}`).value = offerData.companyName || '';
+        document.getElementById(`position-${offerId}`).value = offerData.position || '';
+        document.getElementById(`city-${offerId}`).value = offerData.city || '';
+        document.getElementById(`start-date-${offerId}`).value = offerData.startDate || '';
+        document.getElementById(`contract-years-${offerId}`).value = offerData.contractYears || '3';
+        document.getElementById(`probation-months-${offerId}`).value = offerData.probationMonths || '3';
+        document.getElementById(`probation-salary-rate-${offerId}`).value = offerData.probationSalaryRate || '0.8';
+      } else if (step === 2) {
+        // 薪资结构
+        document.getElementById(`base-salary-${offerId}`).value = offerData.baseSalary || '';
+        document.getElementById(`annual-bonus-type-${offerId}`).value = offerData.annualBonusType || 'fixed';
+        
+        const amountContainer = document.getElementById(`annual-bonus-amount-container-${offerId}`);
+        const rateContainer = document.getElementById(`annual-bonus-rate-container-${offerId}`);
+        
+        if (offerData.annualBonusType === 'fixed') {
+          amountContainer.classList.remove('hidden');
+          rateContainer.classList.add('hidden');
+          document.getElementById(`annual-bonus-amount-${offerId}`).value = offerData.annualBonusAmount || '';
+        } else if (offerData.annualBonusType === 'variable') {
+          amountContainer.classList.add('hidden');
+          rateContainer.classList.remove('hidden');
+          document.getElementById(`annual-bonus-rate-${offerId}`).value = offerData.annualBonusRate || '';
+        } else {
+          amountContainer.classList.add('hidden');
+          rateContainer.classList.add('hidden');
+        }
+        
+        document.getElementById(`performance-bonus-frequency-${offerId}`).value = offerData.performanceBonusFrequency || 'monthly';
+        const performanceContainer = document.getElementById(`performance-bonus-amount-container-${offerId}`);
+        if (offerData.performanceBonusFrequency !== 'none') {
+          performanceContainer.classList.remove('hidden');
+          document.getElementById(`performance-bonus-amount-${offerId}`).value = offerData.performanceBonusAmount || '';
+        } else {
+          performanceContainer.classList.add('hidden');
+        }
+        document.getElementById(`performance-bonus-guaranteed-${offerId}`).value = offerData.performanceBonusGuaranteed ? 'true' : 'false';
+        
+        document.getElementById(`stock-options-${offerId}`).value = offerData.stockOptions ? 'yes' : 'no';
+        const stockContainer = document.getElementById(`stock-options-details-container-${offerId}`);
+        if (offerData.stockOptions) {
+          stockContainer.classList.remove('hidden');
+          document.getElementById(`stock-options-shares-${offerId}`).value = offerData.stockOptionsShares || '';
+          document.getElementById(`stock-options-vesting-${offerId}`).value = offerData.stockOptionsVesting || '';
+          document.getElementById(`stock-options-price-${offerId}`).value = offerData.stockOptionsPrice || '';
+        } else {
+          stockContainer.classList.add('hidden');
+        }
+        
+        document.getElementById(`housing-allowance-${offerId}`).value = offerData.housingAllowance || '';
+        document.getElementById(`transportation-allowance-${offerId}`).value = offerData.transportationAllowance || '';
+        document.getElementById(`meal-allowance-${offerId}`).value = offerData.mealAllowance || '';
+        document.getElementById(`other-allowance-${offerId}`).value = offerData.otherAllowance || '';
+      } else if (step === 3) {
+        // 工作条件
+        document.getElementById(`social-security-base-${offerId}`).value = offerData.socialSecurityBase || '';
+        document.getElementById(`housing-fund-base-${offerId}`).value = offerData.housingFundBase || '';
+        document.getElementById(`housing-fund-rate-${offerId}`).value = offerData.housingFundRate || '0.12';
+        document.getElementById(`supplementary-fund-${offerId}`).value = offerData.supplementaryFund ? 'yes' : 'no';
+        
+        document.getElementById(`daily-hours-${offerId}`).value = offerData.dailyHours || '';
+        document.getElementById(`weekend-off-${offerId}`).value = offerData.weekendOff ? 'yes' : 'no';
+        document.getElementById(`overtime-hours-${offerId}`).value = offerData.overtimeHours || '';
+        document.getElementById(`overtime-compensation-${offerId}`).value = offerData.overtimeCompensation || '1.5';
+        
+        document.getElementById(`career-development-${offerId}`).value = offerData.careerDevelopment || '8';
+        document.getElementById(`career-development-value-${offerId}`).textContent = offerData.careerDevelopment || '8';
+        
+        document.getElementById(`team-atmosphere-${offerId}`).value = offerData.teamAtmosphere || '5';
+        document.getElementById(`team-atmosphere-value-${offerId}`).textContent = offerData.teamAtmosphere || '5';
+        
+        document.getElementById(`interest-match-${offerId}`).value = offerData.interestMatch || '8';
+        document.getElementById(`interest-match-value-${offerId}`).textContent = offerData.interestMatch || '8';
+        
+        document.getElementById(`remote-work-${offerId}`).value = offerData.remoteWork || 'no';
+        document.getElementById(`annual-leave-${offerId}`).value = offerData.annualLeave || '';
+        document.getElementById(`commute-time-${offerId}`).value = offerData.commuteTime || '';
+        document.getElementById(`notes-${offerId}`).value = offerData.notes || '';
+      }
+    }
+
+    // 保存当前Offer数据
+    function saveOfferData(offerId) {
+      // 保存当前步骤数据
+      saveStepData(currentStep);
+    }
+
+    // 计算结果
+    function calculateResults() {
+      // 获取所有有效的Offer
+      const validOffers = [];
+      for (let i = 1; i <= maxOfferId; i++) {
+        if (offers[i] && offers[i].baseSalary) {
+          validOffers.push({
+            id: i,
+            data: offers[i],
+            result: calculateOfferResult(offers[i])
+          });
+        }
+      }
+
+      // 至少需要一个有效Offer才可展示结果
+      if (validOffers.length === 0) {
+        alert('请至少填写一个完整的Offer信息');
+        return;
+      }
+
+      // 更新UI
+      updateResultUI(validOffers);
+
+      // 生成图表
+      generateCharts(validOffers);
+
+      // 生成优劣势分析
+      generateAnalysis(validOffers);
+
+      // 生成个性化建议
+      generateAdvice(validOffers);
+
+      updateFinalVerdict(validOffers);
+    }
+
+    // 计算单个Offer结果
+    function calculateOfferResult(offer) {
+      if (!offer || !offer.baseSalary) {
+        return {
+          beforeTaxIncome: 0,
+          afterTaxIncome: 0,
+          monthlyAfterTaxIncome: 0,
+          socialSecurity: 0,
+          housingFund: 0,
+          tax: 0,
+          salaryComposition: {
+            baseSalary: 0,
+            annualBonus: 0,
+            performanceBonus: 0,
+            allowances: 0,
+            stockOptions: 0
+          },
+          scores: {
+            salaryCompetitiveness: 0,
+            benefits: 0,
+            workIntensity: 0,
+            cityLivability: 0,
+            careerDevelopment: 0,
+            teamAtmosphere: 0,
+            interestMatch: 0,
+            total: 0
+          }
+        };
+      }
+
+      // 计算年收入组成
+      const baseSalary = offer.baseSalary * 12;
+      
+      let annualBonus = 0;
+      if (offer.annualBonusType === 'fixed') {
+        annualBonus = offer.annualBonusAmount || 0;
+      } else if (offer.annualBonusType === 'variable') {
+        annualBonus = offer.baseSalary * (offer.annualBonusRate || 0);
+      }
+      
+      let performanceBonus = 0;
+      if (offer.performanceBonusFrequency === 'monthly') {
+        performanceBonus = (offer.performanceBonusAmount || 0) * 12;
+      } else if (offer.performanceBonusFrequency === 'quarterly') {
+        performanceBonus = (offer.performanceBonusAmount || 0) * 4;
+      } else if (offer.performanceBonusFrequency === 'annual') {
+        performanceBonus = offer.performanceBonusAmount || 0;
+      }
+      
+      const allowances = (offer.housingAllowance + offer.transportationAllowance + 
+                         offer.mealAllowance + offer.otherAllowance) * 12;
+      
+      let stockOptions = 0;
+      if (offer.stockOptions) {
+        // 简化计算，假设每年平均行权
+        stockOptions = (offer.stockOptionsShares * offer.stockOptionsPrice) / (offer.stockOptionsVesting || 1);
+      }
+      
+      const beforeTaxIncome = baseSalary + annualBonus + performanceBonus + allowances + stockOptions;
+
+      // 计算社保公积金
+      const socialSecurityBase = Math.min(Math.max(offer.socialSecurityBase, 
+        cityData[offer.city || 'other'].socialSecurity.lowerLimit), 
+        cityData[offer.city || 'other'].socialSecurity.upperLimit);
+      
+      const socialSecurity = socialSecurityBase * socialSecurityRates.total * 12;
+      
+      const housingFundBase = Math.min(Math.max(offer.housingFundBase, 
+        cityData[offer.city || 'other'].housingFund.lowerLimit), 
+        cityData[offer.city || 'other'].housingFund.upperLimit);
+      
+      const housingFund = housingFundBase * offer.housingFundRate * 2 * 12; // 个人+公司
+      
+      // 计算个税
+      const taxableIncome = beforeTaxIncome - socialSecurity - (housingFundBase * offer.housingFundRate * 12) - 60000;
+      let tax = 0;
+      
+      if (taxableIncome > 0) {
+        for (const bracket of taxRateTable) {
+          if (taxableIncome > bracket.min) {
+            const taxableAmount = Math.min(taxableIncome - bracket.min, bracket.max - bracket.min);
+            tax += taxableAmount * bracket.rate;
+          } else {
+            break;
+          }
+        }
+      }
+      
+      // 计算税后收入
+      const afterTaxIncome = beforeTaxIncome - socialSecurity - (housingFundBase * offer.housingFundRate * 12) - tax;
+      const monthlyAfterTaxIncome = afterTaxIncome / 12;
+
+      // 计算综合评分
+      // 薪资竞争力 (20分)
+      const salaryCompetitiveness = Math.min(20, Math.max(0, Math.log10(afterTaxIncome / 10000) * 5));
+      
+      // 福利完善度 (15分)
+      let benefits = 0;
+      benefits += (offer.housingFundRate / 0.12) * 5; // 公积金比例
+      benefits += offer.supplementaryFund ? 3 : 0; // 补充公积金
+      benefits += (offer.annualLeave >= 15 ? 3 : offer.annualLeave / 5); // 年假
+      benefits += (offer.remoteWork === 'full' ? 4 : offer.remoteWork === 'partial' ? 2 : 0); // 远程工作
+      benefits = Math.min(15, benefits);
+      
+      // 工作强度 (15分)
+      let workIntensity = 15;
+      workIntensity -= (offer.overtimeHours / 10) * 2; // 加班时间
+      workIntensity -= offer.weekendOff ? 0 : 3; // 是否双休
+      workIntensity -= (offer.dailyHours - 8) * 1.5; // 每日工作时长
+      workIntensity = Math.max(0, workIntensity);
+      
+      // 城市宜居性 (10分)
+      const cityLivability = cityData[offer.city || 'other'].livabilityScore;
+      
+      // 职业发展 (15分)
+      const careerDevelopment = offer.careerDevelopment;
+      
+      // 团队氛围 (10分)
+      const teamAtmosphere = offer.teamAtmosphere;
+      
+      // 个人兴趣匹配度 (15分)
+      const interestMatch = offer.interestMatch;
+      
+      // 总分
+      const totalScore = Math.round(salaryCompetitiveness + benefits + workIntensity + cityLivability + 
+                                  careerDevelopment + teamAtmosphere + interestMatch);
+
+      return {
+        beforeTaxIncome,
+        afterTaxIncome,
+        monthlyAfterTaxIncome,
+        socialSecurity,
+        housingFund,
+        tax,
+        salaryComposition: {
+          baseSalary,
+          annualBonus,
+          performanceBonus,
+          allowances,
+          stockOptions
+        },
+        scores: {
+          salaryCompetitiveness,
+          benefits,
+          workIntensity,
+          cityLivability,
+          careerDevelopment,
+          teamAtmosphere,
+          interestMatch,
+          total: totalScore
+        }
+      };
+    }
+
+    // 更新结果UI
+    function updateResultUI(validOffers) {
+      // 获取结果展示区域
+      const resultsContainer = document.getElementById('income-comparison-grid');
+      
+      // 清空现有内容
+      resultsContainer.innerHTML = '';
+      
+      // 为每个有效的Offer创建结果卡片
+      validOffers.forEach((offer, index) => {
+        const result = offer.result;
+        const data = offer.data;
+        
+        const card = document.createElement('div');
+        card.className = 'bg-gray-50 rounded-lg p-4';
+        card.innerHTML = `
+          <div class="flex justify-between items-center mb-2">
+            <span class="font-medium text-gray-700">${data.companyName || `Offer ${offer.id}`}</span>
+            <span class="text-lg font-bold text-primary" id="offer${offer.id}-after-tax">¥0</span>
+          </div>
+          <div class="text-sm text-gray-500 mb-1">税前年收入：<span id="offer${offer.id}-before-tax">¥0</span></div>
+          <div class="text-sm text-gray-500">税后月收入：<span id="offer${offer.id}-monthly-after-tax">¥0</span></div>
+        `;
+        
+        resultsContainer.appendChild(card);
+        
+        // 更新数据
+        document.getElementById(`offer${offer.id}-after-tax`).textContent = formatCurrency(result.afterTaxIncome);
+        document.getElementById(`offer${offer.id}-before-tax`).textContent = formatCurrency(result.beforeTaxIncome);
+        document.getElementById(`offer${offer.id}-monthly-after-tax`).textContent = formatCurrency(result.monthlyAfterTaxIncome);
+      });
+      
+      // 更新综合评分区域
+      const scoresContainer = document.getElementById('scores-grid');
+      scoresContainer.innerHTML = '';
+      
+      validOffers.forEach((offer) => {
+        const result = offer.result;
+        const data = offer.data;
+        
+        const card = document.createElement('div');
+        card.className = 'bg-gray-50 rounded-lg p-4';
+        card.innerHTML = `
+          <div class="flex justify-between items-center mb-2">
+            <span class="font-medium text-gray-700">${data.companyName || `Offer ${offer.id}`}</span>
+            <span class="text-lg font-bold text-primary" id="offer${offer.id}-total-score">0</span>
+          </div>
+          <div class="h-2 bg-gray-200 rounded-full mt-2">
+            <div class="h-2 bg-primary rounded-full" id="offer${offer.id}-score-bar" style="width: 0%"></div>
+          </div>
+        `;
+        
+        scoresContainer.appendChild(card);
+        
+        // 更新数据
+        document.getElementById(`offer${offer.id}-total-score`).textContent = result.scores.total;
+        document.getElementById(`offer${offer.id}-score-bar`).style.width = `${result.scores.total}%`;
+      });
+    }
+
+    // 生成图表
+    function generateCharts(validOffers) {
+      // 定义颜色数组
+      const colors = [
+        { bg: 'rgba(26, 86, 219, 0.7)', border: 'rgba(26, 86, 219, 1)' },
+        { bg: 'rgba(16, 185, 129, 0.7)', border: 'rgba(16, 185, 129, 1)' },
+        { bg: 'rgba(245, 158, 11, 0.7)', border: 'rgba(245, 158, 11, 1)' },
+        { bg: 'rgba(59, 130, 246, 0.7)', border: 'rgba(59, 130, 246, 1)' },
+        { bg: 'rgba(139, 92, 246, 0.7)', border: 'rgba(139, 92, 246, 1)' },
+        { bg: 'rgba(239, 68, 68, 0.7)', border: 'rgba(239, 68, 68, 1)' },
+        { bg: 'rgba(249, 115, 22, 0.7)', border: 'rgba(249, 115, 22, 1)' },
+        { bg: 'rgba(14, 165, 233, 0.7)', border: 'rgba(14, 165, 233, 1)' }
+      ];
+
+      // 收入对比柱状图
+      const salaryComparisonCanvas = document.getElementById('salary-comparison-chart');
+      if (!salaryComparisonCanvas) return;
+      const salaryComparisonCtx = salaryComparisonCanvas.getContext('2d');
+      new Chart(salaryComparisonCtx, {
+        type: 'bar',
+        data: {
+          labels: ['税前年收入', '税后年收入', '税后月收入'],
+          datasets: validOffers.map((offer, index) => {
+            const result = offer.result;
+            const data = offer.data;
+            const color = colors[index % colors.length];
+            
+            return {
+              label: data.companyName || `Offer ${offer.id}`,
+              data: [
+                result.beforeTaxIncome / 10000,
+                result.afterTaxIncome / 10000,
+                result.monthlyAfterTaxIncome / 1000
+              ],
+              backgroundColor: color.bg,
+              borderColor: color.border,
+              borderWidth: 1
+            };
+          })
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'top',
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  let label = context.dataset.label || '';
+                  if (label) {
+                    label += ': ';
+                  }
+                  if (context.parsed.y !== null) {
+                    if (context.dataIndex === 2) {
+                      label += '¥' + context.parsed.y.toFixed(2) + 'K';
+                    } else {
+                      label += '¥' + context.parsed.y.toFixed(2) + 'W';
+                    }
+                  }
+                  return label;
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: function(value) {
+                  return '¥' + value + 'W';
+                }
+              }
+            }
+          }
+        }
+      });
+
+      // 薪资构成饼图区域
+      const compositionChartsContainer = document.getElementById('composition-grid');
+      // 直接清空容器，避免选择器语法错误
+      compositionChartsContainer.innerHTML = '';
+      
+      // 为每个有效的Offer创建薪资构成饼图
+      validOffers.forEach((offer, index) => {
+        const result = offer.result;
+        const data = offer.data;
+        
+        // 创建图表容器
+        const chartContainer = document.createElement('div');
+        chartContainer.id = `offer${offer.id}-salary-composition-chart-container`;
+        
+        // 创建标题
+        const title = document.createElement('h4');
+        title.className = 'font-medium text-gray-700 mb-2';
+        title.textContent = data.companyName || `Offer ${offer.id}`;
+        chartContainer.appendChild(title);
+        
+        // 创建canvas元素
+        const canvas = document.createElement('canvas');
+        canvas.id = `offer${offer.id}-salary-composition-chart`;
+        canvas.height = 250;
+        chartContainer.appendChild(canvas);
+        
+        // 添加到容器
+        compositionChartsContainer.appendChild(chartContainer);
+        
+        // 创建图表
+        const compositionCtx = canvas.getContext('2d');
+        new Chart(compositionCtx, {
+          type: 'pie',
+          data: {
+            labels: ['基本工资', '年终奖', '绩效奖金', '补贴', '股票期权'],
+            datasets: [{
+              data: [
+                result.salaryComposition.baseSalary,
+                result.salaryComposition.annualBonus,
+                result.salaryComposition.performanceBonus,
+                result.salaryComposition.allowances,
+                result.salaryComposition.stockOptions
+              ],
+              backgroundColor: [
+                'rgba(26, 86, 219, 0.7)',
+                'rgba(16, 185, 129, 0.7)',
+                'rgba(245, 158, 11, 0.7)',
+                'rgba(59, 130, 246, 0.7)',
+                'rgba(139, 92, 246, 0.7)'
+              ],
+              borderColor: [
+                'rgba(26, 86, 219, 1)',
+                'rgba(16, 185, 129, 1)',
+                'rgba(245, 158, 11, 1)',
+                'rgba(59, 130, 246, 1)',
+                'rgba(139, 92, 246, 1)'
+              ],
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: {
+                position: 'right',
+              },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    const label = context.label || '';
+                    const value = context.parsed || 0;
+                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                    const percentage = Math.round((value / total) * 100);
+                    return `${label}: ¥${formatNumber(value)} (${percentage}%)`;
+                  }
+                }
+              }
+            }
+          }
+        });
+      });
+
+      // 综合评分雷达图
+      const scoreRadarCanvas = document.getElementById('score-radar-chart');
+      if (!scoreRadarCanvas) return;
+      const scoreRadarCtx = scoreRadarCanvas.getContext('2d');
+      new Chart(scoreRadarCtx, {
+        type: 'radar',
+        data: {
+          labels: [
+            '薪资竞争力',
+            '福利完善度',
+            '工作强度',
+            '城市宜居性',
+            '职业发展',
+            '团队氛围',
+            '兴趣匹配度'
+          ],
+          datasets: validOffers.map((offer, index) => {
+            const result = offer.result;
+            const data = offer.data;
+            const color = colors[index % colors.length];
+            
+            return {
+              label: data.companyName || `Offer ${offer.id}`,
+              data: [
+                result.scores.salaryCompetitiveness,
+                result.scores.benefits,
+                result.scores.workIntensity,
+                result.scores.cityLivability,
+                result.scores.careerDevelopment,
+                result.scores.teamAtmosphere,
+                result.scores.interestMatch
+              ],
+              backgroundColor: color.bg.replace('0.7', '0.2'),
+              borderColor: color.border,
+              borderWidth: 2,
+              pointBackgroundColor: color.border
+            };
+          })
+        },
+        options: {
+          responsive: true,
+          scales: {
+            r: {
+              angleLines: {
+                display: true
+              },
+              suggestedMin: 0,
+              suggestedMax: 20
+            }
+          }
+        }
+      });
+    }
+
+    // 生成优劣势分析
+    function generateAnalysis(validOffers) {
+      // 获取分析区域
+      const analysisContainer = document.getElementById('analysis-grid');
+      
+      // 清空现有内容
+      analysisContainer.innerHTML = '';
+      
+      // 为每个有效的Offer创建分析卡片
+      validOffers.forEach((offer) => {
+        const result = offer.result;
+        const data = offer.data;
+        
+        // 计算优势和劣势
+        const advantages = [];
+        const disadvantages = [];
+        
+        // 与其他所有Offer比较
+        validOffers.forEach((otherOffer) => {
+          if (offer.id === otherOffer.id) return;
+          
+          const otherResult = otherOffer.result;
+          
+          // 税后收入
+          if (result.afterTaxIncome > otherResult.afterTaxIncome * 1.1) {
+            advantages.push(`税后收入显著高于${otherOffer.data.companyName || `Offer ${otherOffer.id}`}`);
+          } else if (result.afterTaxIncome < otherResult.afterTaxIncome * 0.9) {
+            disadvantages.push(`税后收入显著低于${otherOffer.data.companyName || `Offer ${otherOffer.id}`}`);
+          }
+          
+          // 福利完善度
+          if (result.scores.benefits > otherResult.scores.benefits * 1.1) {
+            advantages.push(`福利体系比${otherOffer.data.companyName || `Offer ${otherOffer.id}`}更完善`);
+          } else if (result.scores.benefits < otherResult.scores.benefits * 0.9) {
+            disadvantages.push(`福利体系不如${otherOffer.data.companyName || `Offer ${otherOffer.id}`}完善`);
+          }
+          
+          // 工作强度
+          if (result.scores.workIntensity > otherResult.scores.workIntensity * 1.1) {
+            advantages.push(`工作强度低于${otherOffer.data.companyName || `Offer ${otherOffer.id}`}，工作生活平衡更好`);
+          } else if (result.scores.workIntensity < otherResult.scores.workIntensity * 0.9) {
+            disadvantages.push(`工作强度高于${otherOffer.data.companyName || `Offer ${otherOffer.id}`}，工作生活平衡较差`);
+          }
+          
+          // 城市宜居性
+          if (result.scores.cityLivability > otherResult.scores.cityLivability * 1.1) {
+            advantages.push(`所在城市宜居度高于${otherOffer.data.companyName || `Offer ${otherOffer.id}`}`);
+          } else if (result.scores.cityLivability < otherResult.scores.cityLivability * 0.9) {
+            disadvantages.push(`所在城市宜居度低于${otherOffer.data.companyName || `Offer ${otherOffer.id}`}`);
+          }
+          
+          // 职业发展
+          if (result.scores.careerDevelopment > otherResult.scores.careerDevelopment * 1.1) {
+            advantages.push(`职业发展前景优于${otherOffer.data.companyName || `Offer ${otherOffer.id}`}`);
+          } else if (result.scores.careerDevelopment < otherResult.scores.careerDevelopment * 0.9) {
+            disadvantages.push(`职业发展前景不如${otherOffer.data.companyName || `Offer ${otherOffer.id}`}`);
+          }
+        });
+        
+        // 创建分析卡片
+        const card = document.createElement('div');
+        card.className = 'bg-gray-50 rounded-lg p-4';
+        card.innerHTML = `
+          <h4 class="font-medium text-gray-700 mb-2">${data.companyName || `Offer ${offer.id}`} 优势</h4>
+          <ul class="list-disc list-inside text-gray-600 space-y-1" id="offer${offer.id}-advantages">
+            <li>加载中...</li>
+          </ul>
+          <h4 class="font-medium text-gray-700 mt-4 mb-2">${data.companyName || `Offer ${offer.id}`} 劣势</h4>
+          <ul class="list-disc list-inside text-gray-600 space-y-1" id="offer${offer.id}-disadvantages">
+            <li>加载中...</li>
+          </ul>
+        `;
+        
+        analysisContainer.appendChild(card);
+        
+        // 更新分析列表
+        updateAnalysisList(`offer${offer.id}-advantages`, advantages);
+        updateAnalysisList(`offer${offer.id}-disadvantages`, disadvantages);
+      });
+    }
+
+    // 更新分析列表
+    function updateAnalysisList(elementId, items) {
+      const listElement = document.getElementById(elementId);
+      listElement.innerHTML = '';
+      
+      if (items.length === 0) {
+        const li = document.createElement('li');
+        li.textContent = '暂无明显优势';
+        listElement.appendChild(li);
+      } else {
+        items.forEach(item => {
+          const li = document.createElement('li');
+          li.textContent = item;
+          listElement.appendChild(li);
+        });
+      }
+    }
+
+    // 生成个性化建议
+    function generateAdvice(validOffers) {
+      let advice = '';
+      
+      // 按总分排序
+      const sortedOffers = [...validOffers].sort((a, b) => b.result.scores.total - a.result.scores.total);
+      
+      if (sortedOffers.length === 1) {
+        advice = '请至少添加两个Offer进行对比，以获取更有价值的建议。';
+      } else if (sortedOffers.length === 2) {
+        const topOffer = sortedOffers[0];
+        const secondOffer = sortedOffers[1];
+        const scoreDiff = topOffer.result.scores.total - secondOffer.result.scores.total;
+        
+        if (scoreDiff > 10) {
+          advice = `${topOffer.data.companyName || `Offer ${topOffer.id}`}在综合评估中表现显著优于${secondOffer.data.companyName || `Offer ${secondOffer.id}`}，特别是在`;
+          const优势 = [];
+          
+          if (topOffer.result.scores.salaryCompetitiveness > secondOffer.result.scores.salaryCompetitiveness * 1.1) {
+            优势.push('薪资竞争力');
+          }
+          if (topOffer.result.scores.benefits > secondOffer.result.scores.benefits * 1.1) {
+            优势.push('福利完善度');
+          }
+          if (topOffer.result.scores.workIntensity > secondOffer.result.scores.workIntensity * 1.1) {
+            优势.push('工作强度');
+          }
+          if (topOffer.result.scores.cityLivability > secondOffer.result.scores.cityLivability * 1.1) {
+            优势.push('城市宜居性');
+          }
+          if (topOffer.result.scores.careerDevelopment > secondOffer.result.scores.careerDevelopment * 1.1) {
+            优势.push('职业发展');
+          }
+          
+          if (优势.length > 0) {
+            advice += 优势.join('、');
+          } else {
+            advice += '多个方面';
+          }
+          
+          advice += `方面。如果您追求综合发展，${topOffer.data.companyName || `Offer ${topOffer.id}`}是更好的选择。`;
+        } else {
+          advice = `两个Offer各有优势，${topOffer.data.companyName || `Offer ${topOffer.id}`}在`;
+          const top优势 = [];
+          
+          if (topOffer.result.scores.salaryCompetitiveness > secondOffer.result.scores.salaryCompetitiveness * 1.05) {
+            top优势.push('薪资竞争力');
+          }
+          if (topOffer.result.scores.benefits > secondOffer.result.scores.benefits * 1.05) {
+            top优势.push('福利完善度');
+          }
+          if (topOffer.result.scores.workIntensity > secondOffer.result.scores.workIntensity * 1.05) {
+            top优势.push('工作强度');
+          }
+          if (topOffer.result.scores.cityLivability > secondOffer.result.scores.cityLivability * 1.05) {
+            top优势.push('城市宜居性');
+          }
+          if (topOffer.result.scores.careerDevelopment > secondOffer.result.scores.careerDevelopment * 1.05) {
+            top优势.push('职业发展');
+          }
+          
+          if (top优势.length > 0) {
+            advice += top优势.join('、');
+          } else {
+            advice += '某些方面';
+          }
+          
+          advice += `表现较好，而${secondOffer.data.companyName || `Offer ${secondOffer.id}`}在`;
+          const second优势 = [];
+          
+          if (secondOffer.result.scores.salaryCompetitiveness > topOffer.result.scores.salaryCompetitiveness * 1.05) {
+            second优势.push('薪资竞争力');
+          }
+          if (secondOffer.result.scores.benefits > topOffer.result.scores.benefits * 1.05) {
+            second优势.push('福利完善度');
+          }
+          if (secondOffer.result.scores.workIntensity > topOffer.result.scores.workIntensity * 1.05) {
+            second优势.push('工作强度');
+          }
+          if (secondOffer.result.scores.cityLivability > topOffer.result.scores.cityLivability * 1.05) {
+            second优势.push('城市宜居性');
+          }
+          if (secondOffer.result.scores.careerDevelopment > topOffer.result.scores.careerDevelopment * 1.05) {
+            second优势.push('职业发展');
+          }
+          
+          if (second优势.length > 0) {
+            advice += second优势.join('、');
+          } else {
+            advice += '其他方面';
+          }
+          
+          advice += '更具优势。建议您根据个人职业规划和优先考虑因素做出选择。如果您更看重薪资和福利，可以选择薪资更高的Offer；如果您更看重工作生活平衡和城市宜居性，可以选择工作强度较低的Offer。';
+        }
+      } else {
+        // 多个Offer的情况
+        const topOffer = sortedOffers[0];
+        const secondOffer = sortedOffers[1];
+        const scoreDiff = topOffer.result.scores.total - secondOffer.result.scores.total;
+        
+        if (scoreDiff > 10) {
+          advice = `${topOffer.data.companyName || `Offer ${topOffer.id}`}在综合评估中表现最佳，显著优于其他Offer，特别是在`;
+          const优势 = [];
+          
+          // 找出相对于所有其他Offer的优势
+          sortedOffers.slice(1).forEach(otherOffer => {
+            if (topOffer.result.scores.salaryCompetitiveness > otherOffer.result.scores.salaryCompetitiveness * 1.1) {
+              if (!优势.includes('薪资竞争力')) 优势.push('薪资竞争力');
+            }
+            if (topOffer.result.scores.benefits > otherOffer.result.scores.benefits * 1.1) {
+              if (!优势.includes('福利完善度')) 优势.push('福利完善度');
+            }
+            if (topOffer.result.scores.workIntensity > otherOffer.result.scores.workIntensity * 1.1) {
+              if (!优势.includes('工作强度')) 优势.push('工作强度');
+            }
+            if (topOffer.result.scores.cityLivability > otherOffer.result.scores.cityLivability * 1.1) {
+              if (!优势.includes('城市宜居性')) 优势.push('城市宜居性');
+            }
+            if (topOffer.result.scores.careerDevelopment > otherOffer.result.scores.careerDevelopment * 1.1) {
+              if (!优势.includes('职业发展')) 优势.push('职业发展');
+            }
+          });
+          
+          if (优势.length > 0) {
+            advice += 优势.join('、');
+          } else {
+            advice += '多个方面';
+          }
+          
+          advice += `方面。如果您追求综合发展，${topOffer.data.companyName || `Offer ${topOffer.id}`}是最佳选择。`;
+        } else {
+          advice = `在所有Offer中，${topOffer.data.companyName || `Offer ${topOffer.id}`}综合表现略优，但其他Offer在某些方面也有竞争力。`;
+          
+          // 分析每个Offer的独特优势
+          sortedOffers.forEach((offer, index) => {
+            if (index < 3) { // 只分析前3个
+              const 优势 = [];
+              
+              sortedOffers.forEach(otherOffer => {
+                if (offer.id === otherOffer.id) return;
+                
+                if (offer.result.scores.salaryCompetitiveness > otherOffer.result.scores.salaryCompetitiveness * 1.1) {
+                  if (!优势.includes('薪资竞争力')) 优势.push('薪资竞争力');
+                }
+                if (offer.result.scores.benefits > otherOffer.result.scores.benefits * 1.1) {
+                  if (!优势.includes('福利完善度')) 优势.push('福利完善度');
+                }
+                if (offer.result.scores.workIntensity > otherOffer.result.scores.workIntensity * 1.1) {
+                  if (!优势.includes('工作强度')) 优势.push('工作强度');
+                }
+                if (offer.result.scores.cityLivability > otherOffer.result.scores.cityLivability * 1.1) {
+                  if (!优势.includes('城市宜居性')) 优势.push('城市宜居性');
+                }
+                if (offer.result.scores.careerDevelopment > otherOffer.result.scores.careerDevelopment * 1.1) {
+                  if (!优势.includes('职业发展')) 优势.push('职业发展');
+                }
+              });
+              
+              if (优势.length > 0) {
+                advice += ` ${offer.data.companyName || `Offer ${offer.id}`}在${优势.join('、')}方面表现突出；`;
+              }
+            }
+          });
+          
+          advice += '建议您根据个人职业规划和优先考虑因素做出选择。如果您更看重薪资和福利，可以选择薪资更高的Offer；如果您更看重工作生活平衡和城市宜居性，可以选择工作强度较低的Offer。';
+        }
+      }
+      
+      document.getElementById('personalized-advice').textContent = advice;
+    }
+
+    function updateFinalVerdict(validOffers) {
+      const verdict = document.getElementById('final-verdict');
+      const title = document.getElementById('verdict-title');
+      const desc = document.getElementById('verdict-desc');
+      if (!verdict || !title || !desc) return;
+      if (!validOffers || validOffers.length === 0) {
+        verdict.classList.add('hidden');
+        return;
+      }
+      verdict.classList.remove('hidden');
+      if (validOffers.length === 1) {
+        const offer = validOffers[0];
+        const name = offer.data.companyName || `Offer ${offer.id}`;
+        title.textContent = `当前选项：${name}`;
+        desc.textContent = '建议补充另一份 Offer 以获得更准确的对比结论。';
+        return;
+      }
+      const sorted = [...validOffers].sort((a, b) => b.result.scores.total - a.result.scores.total);
+      const top = sorted[0];
+      const second = sorted[1];
+      const topName = top.data.companyName || `Offer ${top.id}`;
+      const diff = top.result.scores.total - second.result.scores.total;
+      title.textContent = `最佳选择：${topName}`;
+      const reasons = [];
+      if (top.result.scores.salaryCompetitiveness > second.result.scores.salaryCompetitiveness + 1) reasons.push('薪资竞争力');
+      if (top.result.scores.benefits > second.result.scores.benefits + 1) reasons.push('福利完善度');
+      if (top.result.scores.workIntensity > second.result.scores.workIntensity + 1) reasons.push('工作强度更低');
+      if (top.result.scores.cityLivability > second.result.scores.cityLivability + 1) reasons.push('城市宜居性');
+      if (top.result.scores.careerDevelopment > second.result.scores.careerDevelopment + 1) reasons.push('职业发展');
+      if (top.result.scores.teamAtmosphere > second.result.scores.teamAtmosphere + 1) reasons.push('团队氛围');
+      if (top.result.scores.interestMatch > second.result.scores.interestMatch + 1) reasons.push('兴趣匹配度');
+      const prefix = diff > 10 ? '综合评分显著领先' : diff > 3 ? '综合评分更优' : '综合评分略优';
+      const reasonText = reasons.length ? `在${reasons.slice(0, 3).join('、')}方面更具优势` : '综合表现更优';
+      desc.textContent = `${prefix}（${Math.round(top.result.scores.total)} vs ${Math.round(second.result.scores.total)}），${reasonText}。`;
+    }
+
+    // 保存报告
+    function saveReport() {
+      // 获取所有有效的Offer
+      const validOffers = [];
+      for (let i = 1; i <= maxOfferId; i++) {
+        if (offers[i] && offers[i].baseSalary) {
+          validOffers.push(i);
+        }
+      }
+
+      // 至少需要一个完整的Offer
+      if (validOffers.length < 1) {
+        alert('请至少填写一个完整的Offer信息');
+        return;
+      }
+      
+      // 计算所有有效Offer的结果
+      const results = {};
+      validOffers.forEach(offerId => {
+        results[offerId] = calculateOfferResult(offers[offerId]);
+      });
+      
+      const report = {
+        id: Date.now(),
+        name: `Offer对比报告_${new Date().toLocaleDateString()}`,
+        date: new Date().toISOString(),
+        offers: JSON.parse(JSON.stringify(offers)),
+        results: results,
+        maxOfferId: maxOfferId
+      };
+
+      reports.push(report);
+      localStorage.setItem('offerCompareReports', JSON.stringify(reports));
+
+      alert('报告已保存！');
+      showSection('reports');
+      loadReports();
+    }
+
+    // 加载报告
+    function loadReports() {
+      reports = JSON.parse(localStorage.getItem('offerCompareReports')) || [];
+      const tableBody = document.getElementById('reports-table-body');
+      tableBody.innerHTML = '';
+
+      if (reports.length === 0) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = '<td colspan="4" class="px-6 py-4 text-center text-gray-500">暂无保存的报告</td>';
+        tableBody.appendChild(tr);
+        return;
+      }
+
+      reports.forEach(report => {
+        const tr = document.createElement('tr');
+        const resultIds = Object.keys(report.results || {});
+        const offerNames = resultIds.map(id => {
+          const o = report.offers[id];
+          return (o && o.companyName) ? o.companyName : `Offer ${id}`;
+        });
+
+        tr.innerHTML = `
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm font-medium text-gray-900">${report.name}</div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm text-gray-500">${new Date(report.date).toLocaleString()}</div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm text-gray-500" title="${offerNames.join(' vs ')}">${offerNames.length} 个Offer</div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            <button class="text-primary hover:text-primary-dark mr-3 view-report" data-id="${report.id}">查看</button>
+            <button class="text-red-500 hover:text-red-700 delete-report" data-id="${report.id}">删除</button>
+          </td>
+        `;
+
+        tableBody.appendChild(tr);
+      });
+
+      // 添加事件监听
+      document.querySelectorAll('.view-report').forEach(button => {
+        button.addEventListener('click', () => {
+          const reportId = parseInt(button.dataset.id);
+          viewReport(reportId);
+        });
+      });
+
+      document.querySelectorAll('.delete-report').forEach(button => {
+        button.addEventListener('click', () => {
+          const reportId = parseInt(button.dataset.id);
+          deleteReport(reportId);
+        });
+      });
+    }
+
+    // 查看报告
+    function viewReport(reportId) {
+      const report = reports.find(r => r.id === reportId);
+      if (!report) return;
+
+      offers = JSON.parse(JSON.stringify(report.offers));
+      localStorage.setItem('offerCompareOffers', JSON.stringify(offers));
+
+      showSection('compare');
+      goToStep(4);
+      calculateResults();
+    }
+
+    // 删除报告
+    function deleteReport(reportId) {
+      if (confirm('确定要删除这份报告吗？')) {
+        reports = reports.filter(r => r.id !== reportId);
+        localStorage.setItem('offerCompareReports', JSON.stringify(reports));
+        loadReports();
+      }
+    }
+
+    // 下载PDF报告
+    function downloadImageReport() {
+      if (currentStep !== 4) {
+        showSection('compare');
+        goToStep(4);
+      }
+      const target = document.getElementById('step-4');
+      if (!target || target.classList.contains('hidden')) {
+        showSection('compare');
+        goToStep(4);
+      }
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          html2canvas(target, { scale: 2, useCORS: true, backgroundColor: '#ffffff', windowWidth: target.scrollWidth })
+            .then(canvas => {
+              const imgData = canvas.toDataURL('image/png');
+              const link = document.createElement('a');
+              link.href = imgData;
+              link.download = 'Offer对比报告.png';
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+            })
+            .catch(() => {
+              alert('生成图片失败，请稍后重试');
+            });
+        }, 300);
+      });
+    }
+
+
+    // 格式化货币
+    function formatCurrency(value) {
+      return '¥' + formatNumber(value);
+    }
+
+    // 格式化数字
+    function formatNumber(value) {
+      return new Intl.NumberFormat('zh-CN').format(Math.round(value));
+    }
+
+    // 初始化应用
+    document.addEventListener('DOMContentLoaded', () => {
+      // 从本地存储加载数据
+      const savedOffers = localStorage.getItem('offerCompareOffers');
+      if (savedOffers) {
+        offers = JSON.parse(savedOffers);
+      }
+
+      // 采集各步骤的初始模板（包含{offerId}占位符）
+      for (let s = 1; s <= 4; s++) {
+        const el = document.getElementById(`step-${s}`);
+        if (el) {
+          stepTemplates[s] = el.innerHTML;
+        }
+      }
+
+      init();
+      refreshOfferTabLabels();
+      bindStep4Actions();
+      updateVisitorCount();
+    });
+  </script>
+
+
+</body></html>
